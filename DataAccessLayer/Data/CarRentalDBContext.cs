@@ -16,5 +16,11 @@ namespace DataAccessLayer.Data
 
         public DbSet<Car> Cars { get; set; }
 
+        public DbSet<Customer> Customers { get; set; }
+
+        public DbSet<Driver> Drivers { get; set; }
+
+        public DbSet<CarRent> CarRents { get; set; }
+
     }
 }

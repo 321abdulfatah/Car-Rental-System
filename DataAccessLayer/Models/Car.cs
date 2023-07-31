@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,10 @@ namespace DataAccessLayer.Models
     public class Car
     {
         public int Id  { get; set; }
+
+        public int? DriverID { get; set; }        
+        [ForeignKey("DriverID")]
+        public virtual Driver? Driver { get; set; }
 
         [Required]
         [StringLength(20, MinimumLength = 3)]
@@ -24,8 +29,8 @@ namespace DataAccessLayer.Models
         [Required]
         public double DailyFare { get; set; }
 
-        [Required]
-        public bool HasDriver { get; set; }
+        public ICollection<Customer>? Customers { get; set; }
+
 
 
     }

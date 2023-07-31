@@ -84,7 +84,7 @@ namespace CarRentalSystemAPI.Controllers
                     return BadRequest("ID mismatch");
 
                 var req = _ServiceCar.Update(CarRequest);
-                if (req == null) return NotFound($"Movie with Id = {id} not found");
+                if (req == null) return NotFound($"Car with Id = {id} not found");
                 return Ok(CarRequest);
             }
             catch (Exception)

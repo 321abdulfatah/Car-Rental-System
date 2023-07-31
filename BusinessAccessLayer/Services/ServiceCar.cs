@@ -78,7 +78,6 @@ namespace BusinessAccessLayer.Services
                     CarToUpdate.Type = Car.Type;
                     CarToUpdate.DailyFare = Car.DailyFare;
                     CarToUpdate.Color = Car.Color;
-                    CarToUpdate.HasDriver = Car.HasDriver;
 
                     return await _repository.Update(Car);
                 }

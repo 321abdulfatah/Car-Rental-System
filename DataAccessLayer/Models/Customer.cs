@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataAccessLayer.Models
 {
-    public class Customer:person
+    public class Customer:Person
     {
-        IEnumerable<Car> cars;
+        public ICollection<Car> Cars { get; set; }
 
     }
 }
