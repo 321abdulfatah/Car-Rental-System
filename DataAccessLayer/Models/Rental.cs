@@ -24,6 +24,8 @@ namespace DataAccessLayer.Models
         [ForeignKey("DriverID")]
         public virtual Driver? Driver { get; set; }
 
+        public int Rent { get; set; }
+
         public StatusRent StatusRent { get; set; }
 
         public DateTime StratDateRent{ get; set; }
