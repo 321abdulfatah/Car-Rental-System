@@ -6,27 +6,16 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataAccessLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class updataDatabase : Migration
+    public partial class creatdb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "HasDriver",
-                table: "Cars");
-
-            migrationBuilder.AddColumn<int>(
-                name: "DriverID",
-                table: "Cars",
-                type: "int",
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "Customers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Age = table.Column<byte>(type: "tinyint", nullable: false),
@@ -43,9 +32,9 @@ namespace DataAccessLayer.Migrations
                 name: "Drivers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Salary = table.Column<double>(type: "float", nullable: false),
+                    isAvailable = table.Column<bool>(type: "bit", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Age = table.Column<byte>(type: "tinyint", nullable: false),
@@ -59,11 +48,32 @@ namespace DataAccessLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Cars",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DriverID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    EngineCapacity = table.Column<double>(type: "float", nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DailyFare = table.Column<double>(type: "float", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cars", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Cars_Drivers_DriverID",
+                        column: x => x.DriverID,
+                        principalTable: "Drivers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CarCustomer",
                 columns: table => new
                 {
-                    CarsId = table.Column<int>(type: "int", nullable: false),
-                    CustomersId = table.Column<int>(type: "int", nullable: false)
+                    CarsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomersId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -83,43 +93,38 @@ namespace DataAccessLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CarRents",
+                name: "Rentals",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CarID = table.Column<int>(type: "int", nullable: false),
-                    CustomerID = table.Column<int>(type: "int", nullable: false),
-                    DriverID = table.Column<int>(type: "int", nullable: true),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CarID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DriverID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    StatusRent = table.Column<int>(type: "int", nullable: false),
                     StratDateRent = table.Column<DateTime>(type: "datetime2", nullable: false),
                     RentTerm = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CarRents", x => x.Id);
+                    table.PrimaryKey("PK_Rentals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CarRents_Cars_CarID",
+                        name: "FK_Rentals_Cars_CarID",
                         column: x => x.CarID,
                         principalTable: "Cars",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CarRents_Customers_CustomerID",
+                        name: "FK_Rentals_Customers_CustomerID",
                         column: x => x.CustomerID,
                         principalTable: "Customers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CarRents_Drivers_DriverID",
+                        name: "FK_Rentals_Drivers_DriverID",
                         column: x => x.DriverID,
                         principalTable: "Drivers",
                         principalColumn: "Id");
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Cars_DriverID",
-                table: "Cars",
-                column: "DriverID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CarCustomer_CustomersId",
@@ -127,61 +132,43 @@ namespace DataAccessLayer.Migrations
                 column: "CustomersId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CarRents_CarID",
-                table: "CarRents",
+                name: "IX_Cars_DriverID",
+                table: "Cars",
+                column: "DriverID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Rentals_CarID",
+                table: "Rentals",
                 column: "CarID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CarRents_CustomerID",
-                table: "CarRents",
+                name: "IX_Rentals_CustomerID",
+                table: "Rentals",
                 column: "CustomerID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CarRents_DriverID",
-                table: "CarRents",
+                name: "IX_Rentals_DriverID",
+                table: "Rentals",
                 column: "DriverID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Cars_Drivers_DriverID",
-                table: "Cars",
-                column: "DriverID",
-                principalTable: "Drivers",
-                principalColumn: "Id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Cars_Drivers_DriverID",
-                table: "Cars");
-
             migrationBuilder.DropTable(
                 name: "CarCustomer");
 
             migrationBuilder.DropTable(
-                name: "CarRents");
+                name: "Rentals");
+
+            migrationBuilder.DropTable(
+                name: "Cars");
 
             migrationBuilder.DropTable(
                 name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "Drivers");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Cars_DriverID",
-                table: "Cars");
-
-            migrationBuilder.DropColumn(
-                name: "DriverID",
-                table: "Cars");
-
-            migrationBuilder.AddColumn<bool>(
-                name: "HasDriver",
-                table: "Cars",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
         }
     }
 }

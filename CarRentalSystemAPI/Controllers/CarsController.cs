@@ -47,7 +47,7 @@ namespace CarRentalSystemAPI.Controllers
         }
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public IActionResult GetById(Guid id)
         {
             var result =  _ServiceCar.GetById(id);
             return Ok(result);
@@ -58,7 +58,7 @@ namespace CarRentalSystemAPI.Controllers
         [HttpPost]
         public IActionResult Post([FromForm] Car CarRequest)
         {
-            CarRequest.Id = 0;
+            
             if (CarRequest == null)
             {
                 return BadRequest(new PostResponse { Success = false, ErrorCode = "S01", Error = "Invalid post request" });
@@ -75,7 +75,7 @@ namespace CarRentalSystemAPI.Controllers
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromForm] Car CarRequest)
+        public IActionResult Put(Guid id, [FromForm] Car CarRequest)
         {
 
             try
@@ -96,7 +96,7 @@ namespace CarRentalSystemAPI.Controllers
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(Guid id)
         {
             _ServiceCar.Delete(id);
             return Ok("Record Deleted Successfully");

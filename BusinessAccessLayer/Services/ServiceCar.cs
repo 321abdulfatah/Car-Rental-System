@@ -41,20 +41,11 @@ namespace BusinessAccessLayer.Services
                 throw;
             }
         }
-        public void Delete(int Id)
+        public void Delete(Guid Id)
         {
-            try
-            {
-                if (Id != 0)
-                {
-                    var obj = _repository.GetAll().Where(x => x.Id == Id).FirstOrDefault();
-                    _repository.Delete(obj);
-                }
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var obj = _repository.GetAll().Where(x => x.Id == Id).FirstOrDefault();
+            _repository.Delete(obj);
+               
         }
         public async Task<Car> Update(Car Car)
         {
@@ -130,7 +121,7 @@ namespace BusinessAccessLayer.Services
                 throw;
             }
         }
-        public Car GetById(int Id)
+        public Car GetById(Guid Id)
         {
             try
             {

@@ -17,6 +17,6 @@ namespace DataAccessLayer.Contracts
 
         public IEnumerable<T> GetAll(int page, int pageSize);
 
-        public T GetById(int Id);
+        public T GetById(Guid Id);
     }
 }

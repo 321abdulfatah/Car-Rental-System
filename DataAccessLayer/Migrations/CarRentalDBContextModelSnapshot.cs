@@ -24,11 +24,11 @@ namespace DataAccessLayer.Migrations
 
             modelBuilder.Entity("CarCustomer", b =>
                 {
-                    b.Property<int>("CarsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CarsId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CustomersId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CustomersId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("CarsId", "CustomersId");
 
@@ -39,11 +39,9 @@ namespace DataAccessLayer.Migrations
 
             modelBuilder.Entity("DataAccessLayer.Models.Car", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Color")
                         .IsRequired()
@@ -52,8 +50,8 @@ namespace DataAccessLayer.Migrations
                     b.Property<double>("DailyFare")
                         .HasColumnType("float");
 
-                    b.Property<int?>("DriverID")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("DriverID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<double>("EngineCapacity")
                         .HasColumnType("float");
@@ -70,49 +68,11 @@ namespace DataAccessLayer.Migrations
                     b.ToTable("Cars");
                 });
 
-            modelBuilder.Entity("DataAccessLayer.Models.CarRent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CarID")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CustomerID")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DriverID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RentTerm")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StratDateRent")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CarID");
-
-                    b.HasIndex("CustomerID");
-
-                    b.HasIndex("DriverID");
-
-                    b.ToTable("CarRents");
-                });
-
             modelBuilder.Entity("DataAccessLayer.Models.Customer", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -143,11 +103,9 @@ namespace DataAccessLayer.Migrations
 
             modelBuilder.Entity("DataAccessLayer.Models.Driver", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -182,6 +140,43 @@ namespace DataAccessLayer.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("DataAccessLayer.Models.Rental", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CarID")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CustomerID")
+                        .IsRequired()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DriverID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RentTerm")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StatusRent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StratDateRent")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarID");
+
+                    b.HasIndex("CustomerID");
+
+                    b.HasIndex("DriverID");
+
+                    b.ToTable("Rentals");
+                });
+
             modelBuilder.Entity("CarCustomer", b =>
                 {
                     b.HasOne("DataAccessLayer.Models.Car", null)
@@ -206,7 +201,7 @@ namespace DataAccessLayer.Migrations
                     b.Navigation("Driver");
                 });
 
-            modelBuilder.Entity("DataAccessLayer.Models.CarRent", b =>
+            modelBuilder.Entity("DataAccessLayer.Models.Rental", b =>
                 {
                     b.HasOne("DataAccessLayer.Models.Car", "Car")
                         .WithMany()

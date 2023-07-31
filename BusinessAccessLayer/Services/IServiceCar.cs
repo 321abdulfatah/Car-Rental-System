@@ -9,7 +9,7 @@ namespace BusinessAccessLayer.Services
     public interface IServiceCar <T>
     {
         public T Create(T _object);
-        public void Delete(int Id);
+        public void Delete(Guid Id);
 
         public Task<T> Update(T _object);
 
@@ -19,7 +19,7 @@ namespace BusinessAccessLayer.Services
 
         public IEnumerable<T> GetAll(int page, int pageSize);
 
-        public T GetById(int Id);
+        public T GetById(Guid Id);
 
     }
 }

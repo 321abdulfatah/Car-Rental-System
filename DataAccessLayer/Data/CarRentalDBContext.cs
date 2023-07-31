@@ -20,7 +20,7 @@ namespace DataAccessLayer.Data
 
         public DbSet<Driver> Drivers { get; set; }
 
-        public DbSet<CarRent> CarRents { get; set; }
+        public DbSet<Rental> Rentals{ get; set; }
 
     }
 }

@@ -107,7 +107,7 @@ namespace DataAccessLayer.Repositories
                 throw;
             }
         }
-        public Car GetById(int Id)
+        public Car GetById(Guid Id)
         {
             try
             {

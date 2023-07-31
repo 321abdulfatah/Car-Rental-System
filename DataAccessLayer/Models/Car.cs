@@ -10,9 +10,9 @@ namespace DataAccessLayer.Models
 {
     public class Car
     {
-        public int Id  { get; set; }
+        public Guid Id  { get; set; }
 
-        public int? DriverID { get; set; }        
+        public Guid? DriverID { get; set; }        
         [ForeignKey("DriverID")]
         public virtual Driver? Driver { get; set; }
 
