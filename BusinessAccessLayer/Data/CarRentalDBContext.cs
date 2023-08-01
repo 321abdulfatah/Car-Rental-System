@@ -1,10 +1,5 @@
 ﻿using DataAccessLayer.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccessLayer.Data
 {
@@ -22,5 +17,12 @@ namespace DataAccessLayer.Data
 
         public DbSet<Rental> Rentals{ get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            new CarEntityTypeConfiguration().Configure(modelBuilder.Entity<Car>());
+            new CustomerEntityTypeConfiguration().Configure(modelBuilder.Entity<Customer>());
+            new DriverEntityTypeConfiguration().Configure(modelBuilder.Entity<Driver>());
+            new RentalEntityTypeConfiguration().Configure(modelBuilder.Entity<Rental>());
+        }
     }
 }

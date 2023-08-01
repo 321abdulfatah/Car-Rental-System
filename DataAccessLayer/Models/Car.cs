@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,30 +9,19 @@ using System.Threading.Tasks;
 
 namespace DataAccessLayer.Models
 {
-    public class Car
+    public class Car : BaseModel
     {
-        public Guid Id  { get; set; }
+        public Guid? DriverId { get; set; }        
 
-        public Guid? DriverID { get; set; }        
-        [ForeignKey("DriverID")]
-        public virtual Driver? Driver { get; set; }
+        public virtual Driver Driver { get; set; }
 
-        [Required]
-        [StringLength(20, MinimumLength = 3)]
         public string Type   { get; set; }
         
-        [Required]
         public double EngineCapacity   { get; set; }
         
-        [Required]
         public string Color { get; set; }
 
-        [Required]
         public double DailyFare { get; set; }
-
-        public ICollection<Customer>? Customers { get; set; }
-
-
 
     }
 }

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataAccessLayer.Models
 {
-    public class Customer : Person
+    public class BaseModel
     {
+        public Guid Id { get; set; }
 
     }
 }

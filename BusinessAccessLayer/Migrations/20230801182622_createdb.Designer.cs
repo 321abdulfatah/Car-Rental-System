@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace DataAccessLayer.Migrations
+namespace BusinessAccessLayer.Migrations
 {
     [DbContext(typeof(CarRentalDBContext))]
-    [Migration("20230731102221_creatdb")]
-    partial class creatdb
+    [Migration("20230801182622_createdb")]
+    partial class createdb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,21 +24,6 @@ namespace DataAccessLayer.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("CarCustomer", b =>
-                {
-                    b.Property<Guid>("CarsId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CustomersId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("CarsId", "CustomersId");
-
-                    b.HasIndex("CustomersId");
-
-                    b.ToTable("CarCustomer");
-                });
 
             modelBuilder.Entity("DataAccessLayer.Models.Car", b =>
                 {
@@ -53,7 +38,7 @@ namespace DataAccessLayer.Migrations
                     b.Property<double>("DailyFare")
                         .HasColumnType("float");
 
-                    b.Property<Guid?>("DriverID")
+                    b.Property<Guid?>("DriverId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<double>("EngineCapacity")
@@ -66,7 +51,7 @@ namespace DataAccessLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DriverID");
+                    b.HasIndex("DriverId");
 
                     b.ToTable("Cars");
                 });
@@ -79,22 +64,26 @@ namespace DataAccessLayer.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<byte>("Age")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Phone")
                         .HasColumnType("int");
@@ -112,22 +101,26 @@ namespace DataAccessLayer.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<byte>("Age")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Phone")
                         .HasColumnType("int");
@@ -149,16 +142,19 @@ namespace DataAccessLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CarID")
-                        .IsRequired()
+                    b.Property<Guid>("CarId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CustomerID")
-                        .IsRequired()
+                    b.Property<Guid>("CustomerId")
+                        .HasMaxLength(50)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("DriverID")
+                    b.Property<Guid?>("DriverId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Rent")
+                        .HasMaxLength(50)
+                        .HasColumnType("int");
 
                     b.Property<int>("RentTerm")
                         .HasColumnType("int");
@@ -171,35 +167,20 @@ namespace DataAccessLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CarID");
+                    b.HasIndex("CarId");
 
-                    b.HasIndex("CustomerID");
+                    b.HasIndex("CustomerId");
 
-                    b.HasIndex("DriverID");
+                    b.HasIndex("DriverId");
 
                     b.ToTable("Rentals");
-                });
-
-            modelBuilder.Entity("CarCustomer", b =>
-                {
-                    b.HasOne("DataAccessLayer.Models.Car", null)
-                        .WithMany()
-                        .HasForeignKey("CarsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DataAccessLayer.Models.Customer", null)
-                        .WithMany()
-                        .HasForeignKey("CustomersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("DataAccessLayer.Models.Car", b =>
                 {
                     b.HasOne("DataAccessLayer.Models.Driver", "Driver")
                         .WithMany()
-                        .HasForeignKey("DriverID");
+                        .HasForeignKey("DriverId");
 
                     b.Navigation("Driver");
                 });
@@ -208,19 +189,19 @@ namespace DataAccessLayer.Migrations
                 {
                     b.HasOne("DataAccessLayer.Models.Car", "Car")
                         .WithMany()
-                        .HasForeignKey("CarID")
+                        .HasForeignKey("CarId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("DataAccessLayer.Models.Customer", "Customer")
                         .WithMany()
-                        .HasForeignKey("CustomerID")
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("DataAccessLayer.Models.Driver", "Driver")
                         .WithMany()
-                        .HasForeignKey("DriverID");
+                        .HasForeignKey("DriverId");
 
                     b.Navigation("Car");
 
