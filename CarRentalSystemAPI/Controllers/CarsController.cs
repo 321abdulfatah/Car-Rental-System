@@ -1,5 +1,5 @@
-﻿using BusinessAccessLayer.Services;
-using DataAccessLayer.Models;
+﻿using DataAccessLayer.Models;
+using DataAccessLayer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using CarRentalSystemAPI.FileUploadExtension;
@@ -15,10 +15,10 @@ namespace CarRentalSystemAPI.Controllers
     [ApiController]
     public class CarsController : ControllerBase
     {
-        private readonly IServiceCar<Car> _ServiceCar;
-        public CarsController(IServiceCar<Car> ServiceCar)
+        private readonly IRepository<Car> _RepositoryCar;
+        public CarsController(IRepository<Car> RepositryCar)
         {
-            _ServiceCar = ServiceCar;
+            _RepositoryCar = RepositryCar;
         }
         
         [HttpGet("getall")]
@@ -27,32 +27,9 @@ namespace CarRentalSystemAPI.Controllers
             // sorting on  Engine Capacity
             List<CarDto> LstCar = new List<CarDto>();
 
-            var result = _ServiceCar.GetAll().OrderBy(c=>c.EngineCapacity).ToList();
+            var result = _RepositoryCar.GetAll().OrderBy(c=>c.EngineCapacity).ToList();
 
             foreach(var car in result){
-                CarDto objcar = new CarDto();
-
-                objcar.Id = car.Id;
-                objcar.DriverId = car.DriverId;
-                objcar.Driver = car.Driver;
-                objcar.DailyFare = car.DailyFare;
-                objcar.Color = car.Color;
-                objcar.EngineCapacity = car.EngineCapacity;
-                objcar.Type = car.Type;
-                LstCar.Add(objcar);
-            }
-            return Ok(LstCar);
-        }
-
-        [HttpGet("getall/{Type}")]
-        public IActionResult GetAll(string Type)//localhost..../api/cars/getall/{Type}
-        {
-            List<CarDto> LstCar = new List<CarDto>();
-
-            var result = _ServiceCar.GetAll(Type);
-
-            foreach (var car in result)
-            {
                 CarDto objcar = new CarDto();
 
                 objcar.Id = car.Id;
@@ -72,7 +49,7 @@ namespace CarRentalSystemAPI.Controllers
         {
             List<CarDto> LstCar = new List<CarDto>();
 
-            var result = _ServiceCar.GetAll(page, pageSize);
+            var result = _RepositoryCar.GetAll(page, pageSize);
 
             foreach (var car in result)
             {
@@ -95,7 +72,7 @@ namespace CarRentalSystemAPI.Controllers
         public IActionResult GetById(Guid id)
         {
 
-            var car =  _ServiceCar.GetById(id);
+            var car = _RepositoryCar.GetById(id);
             
             CarDto objcar = new CarDto();
 
@@ -136,7 +113,7 @@ namespace CarRentalSystemAPI.Controllers
             CarRequest.Type = CarDto.Type;
             CarRequest.DailyFare = CarDto.DailyFare;
 
-            _ServiceCar.Create(CarRequest);
+            _RepositoryCar.Create(CarRequest);
             return Ok();
         }
 
@@ -160,7 +137,7 @@ namespace CarRentalSystemAPI.Controllers
                 CarRequest.Type = CarDto.Type;
                 CarRequest.DailyFare = CarDto.DailyFare;
 
-                var req = _ServiceCar.Update(CarRequest);
+                var req = _RepositoryCar.Update(CarRequest);
 
                 if (req == null) return NotFound($"Car with Id = {id} not found");
 
@@ -177,7 +154,7 @@ namespace CarRentalSystemAPI.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(Guid id)
         {
-            _ServiceCar.Delete(id);
+            _RepositoryCar.Delete(id);
             return Ok("Record Deleted Successfully");
         }
     }
