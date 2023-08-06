@@ -1,8 +1,6 @@
-﻿using DataAccessLayer.Models;
-
-namespace CarRentalSystemAPI.Dtos
+﻿namespace CarRentalSystemAPI.Dtos
 {
-    public class CarDto : BaseModel
+    public class CreateCarDto
     {
         public string Type { get; set; }
 
@@ -11,8 +9,7 @@ namespace CarRentalSystemAPI.Dtos
         public string Color { get; set; }
 
         public double DailyFare { get; set; }
-        
-        public Guid? DriverId { get; set; }
 
+        public Guid? DriverId { get; set; }
     }
 }

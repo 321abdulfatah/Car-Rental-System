@@ -18,7 +18,7 @@ namespace DataAccessLayer.Data
 
             builder.Property(b => b.StatusRent).IsRequired();
 
-            builder.Property(b => b.StratDateRent).IsRequired();
+            builder.Property(b => b.StartDateRent).IsRequired();
 
             builder.Property(b => b.RentTerm).IsRequired();
         }

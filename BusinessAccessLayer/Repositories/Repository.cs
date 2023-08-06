@@ -16,7 +16,7 @@ namespace BusinessAccessLayer.Repositories
             _entities = context.Set<T>();
         }
 
-        public T Create(T _object)
+        public async Task<T> Create(T _object)
         {
             if (_object == null)
             {
@@ -27,30 +27,8 @@ namespace BusinessAccessLayer.Repositories
 
             return _object;
         }
-
-        public void Delete(T _object)
-        {
-            if (_object == null)
-            {
-                throw new ArgumentNullException("entity");
-            }
-            _entities.Remove(_object);
-            _CarRentalDBContext.SaveChanges();
-        }
-
-        public IEnumerable<T> GetAll()
-        {
-            try
-            {
-                return _entities.AsEnumerable();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        public IEnumerable<T> GetAll(int page, int pageSize)
+        
+        public IEnumerable<T> GetList(int page, int pageSize)
         {
             try
             {
@@ -65,7 +43,7 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public T GetById(Guid Id)
+        public T Get(Guid Id)
         {
             return _entities.SingleOrDefault(s => s.Id == Id);
         }
@@ -74,7 +52,7 @@ namespace BusinessAccessLayer.Repositories
         {
             try
             {
-                var obj = _CarRentalDBContext.Update(_object);
+                var obj = _entities.Update(_object);
                 if (obj != null) await _CarRentalDBContext.SaveChangesAsync();
                 return _object;
             }
@@ -84,14 +62,17 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public void Delete(Guid Id)
+        public T Delete(Guid Id)
         {
             try
             {
-                if (Id != null)
-                {
-                    _entities.Remove(_entities.SingleOrDefault(x => x.Id == Id));
-                }
+                var obj = _entities.SingleOrDefault(x => x.Id == Id);
+                     
+                _entities.Remove(obj);
+                _CarRentalDBContext.SaveChangesAsync();
+
+                return obj;
+                
             }
             catch (Exception)
             {
