@@ -28,13 +28,12 @@ namespace BusinessAccessLayer.Repositories
             return _object;
         }
         
-        public IEnumerable<T> GetList(int page, int pageSize)
+        public IQueryable<T> GetList()
         {
             try
             {
-                int totalNumbers = page * pageSize;
 
-                return _entities.Skip(totalNumbers).Take(pageSize).AsEnumerable();
+                return _entities.AsQueryable();
                 
             }
             catch (Exception)

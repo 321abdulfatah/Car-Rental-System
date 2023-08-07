@@ -3,6 +3,8 @@ using CarRentalSystemAPI.Dtos;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Linq.Dynamic.Core;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -27,12 +29,21 @@ namespace CarRentalSystemAPI.Controllers
         public CarListDto GetList([FromQuery] CarRequestDto CarDto)//localhost..../api/cars/getcars
         {
 
-            var results = _RepositoryCar.GetList(CarDto.PageNumber, CarDto.PageSize);
+            var query = _RepositoryCar.GetList();
             
+            var sortOrderTerm = (CarDto.sortOrder != "asc") ? " descending" : string.Empty;
+            
+            var finalQuery = String.IsNullOrWhiteSpace(CarDto.orderBy) ? query : query.OrderBy(CarDto.orderBy + sortOrderTerm);
+            
+            var itemsToSkip = (CarDto.currentPage - 1) * CarDto.rowsPerPage;
+                        
+            var result = finalQuery.Skip(itemsToSkip).Take(CarDto.rowsPerPage).ToList();
+
+            var carList = _mapper.Map<IEnumerable<CarDto>>(result);
+
             CarListDto LstCar = new CarListDto();
-            LstCar.pageNumber = CarDto.PageNumber;
-            LstCar.pageSize = CarDto.PageSize;
-            LstCar.results = (List<CarDto>)results;
+            
+            LstCar.results = carList;
 
             return LstCar;
         }
