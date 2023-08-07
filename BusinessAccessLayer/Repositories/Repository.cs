@@ -6,6 +6,8 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using DataAccessLayer.Common.Models;
 using Abp.Domain.Entities;
+using Abp.Linq.Extensions;
+using Abp.Collections.Extensions;
 
 namespace BusinessAccessLayer.Repositories
 {
@@ -43,7 +45,7 @@ namespace BusinessAccessLayer.Repositories
                 var query = _entities.AsQueryable();
 
                 // 1- Filtering by using where, . . .. 
-                var filterQuery = String.IsNullOrWhiteSpace(Search) ? query : query;//.Where(x => x.Contains(Search)).FirstOrDefault();
+                var filterQuery = String.IsNullOrWhiteSpace(Column) ? query : String.IsNullOrWhiteSpace(Search) ? query : query = query.Where($"{Column}.Contains(@0)", Search);
 
                 // 2- Get count of query filtered
                 var totalCount = filterQuery.Count();
@@ -51,7 +53,7 @@ namespace BusinessAccessLayer.Repositories
                 //3- Apply sorting
                 var sortOrderTerm = (SortOrder != "asc") ? " descending" : string.Empty;
 
-                var finalQuery = String.IsNullOrWhiteSpace(OrderBy) ? query : query.OrderBy(OrderBy + sortOrderTerm);
+                var finalQuery = String.IsNullOrWhiteSpace(OrderBy) ? filterQuery : filterQuery.OrderBy(OrderBy + sortOrderTerm);
                 
                 //4- Apply paging
                 var itemsToSkip = (PageIndex - 1) * PageSize;
