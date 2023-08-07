@@ -9,6 +9,6 @@ namespace DataAccessLayer.Interfaces
         public Task<T> Delete(Guid Id);
         public Task<T> Update(T _object);
         public PaginatedResult<T> GetList(string Search, string Column, string SortOrder, string OrderBy, int PageIndex, int PageSize);
-        public Task<T> Get(Guid Id);
+        public T Get(Guid Id);
     }
 }

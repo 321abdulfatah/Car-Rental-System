@@ -1,9 +1,9 @@
-﻿using DataAccessLayer.Models;
-
-namespace CarRentalSystemAPI.Dtos
+﻿namespace CarRentalSystemAPI.Dtos
 {
-    public class CarDto : BaseModel
+    public class CarDto
     {
+        public Guid Id { get; set; }
+
         public string Type { get; set; }
 
         public double EngineCapacity { get; set; }

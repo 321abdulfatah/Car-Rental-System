@@ -77,9 +77,9 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public async Task<T> Get(Guid Id)
+        public T Get(Guid Id)
         {
-            var entity = await _entities.FirstOrDefaultAsync(s => s.Id == Id);
+            var entity =  _entities.FirstOrDefault(s => s.Id == Id);
             if (entity == null)
             {
                 throw new EntityNotFoundException($"Entity with ID {Id} not found.");
