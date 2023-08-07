@@ -1,4 +1,5 @@
-﻿using CarRentalSystemAPI.Dtos;
+﻿using AutoMapper;
+using CarRentalSystemAPI.Dtos;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -12,37 +13,26 @@ namespace CarRentalSystemAPI.Controllers
     [ApiController]
     public class CarsController : ControllerBase
     {
+        private readonly IMapper _mapper;
+
         private readonly IRepository<Car> _RepositoryCar;
-        public CarsController(IRepository<Car> RepositryCar)
+        public CarsController(IRepository<Car> RepositryCar, IMapper mapper)
         {
             _RepositoryCar = RepositryCar;
+            _mapper = mapper;
+
         }
 
         [HttpGet("getcars")]
         public CarListDto GetList([FromQuery] CarRequestDto CarDto)//localhost..../api/cars/getcars
         {
 
-            List<CarDto> results = new List<CarDto>();
-
-            var result = _RepositoryCar.GetList(CarDto.PageNumber, CarDto.PageSize);
-
-            foreach (var car in result)
-            {
-                CarDto objcar = new CarDto();
-
-                objcar.Id = car.Id;
-                objcar.DriverId = car.DriverId;
-                objcar.DailyFare = car.DailyFare;
-                objcar.Color = car.Color;
-                objcar.EngineCapacity = car.EngineCapacity;
-                objcar.Type = car.Type;
-
-                results.Add(objcar);
-            }
+            var results = _RepositoryCar.GetList(CarDto.PageNumber, CarDto.PageSize);
+            
             CarListDto LstCar = new CarListDto();
             LstCar.pageNumber = CarDto.PageNumber;
             LstCar.pageSize = CarDto.PageSize;
-            LstCar.results = results;
+            LstCar.results = (List<CarDto>)results;
 
             return LstCar;
         }
@@ -54,14 +44,7 @@ namespace CarRentalSystemAPI.Controllers
 
             var car = _RepositoryCar.Get(id);
 
-            CarDto objcar = new CarDto();
-
-            objcar.Id = car.Id;
-            objcar.DriverId = car.DriverId;
-            objcar.DailyFare = car.DailyFare;
-            objcar.Color = car.Color;
-            objcar.EngineCapacity = car.EngineCapacity;
-            objcar.Type = car.Type;
+            var objcar = _mapper.Map<CarDto>(car);
 
             return objcar;
         }
@@ -71,14 +54,7 @@ namespace CarRentalSystemAPI.Controllers
         [HttpPost]
         public CreateCarDto Create([FromForm] CreateCarDto CarDto)
         {
-            Car CarRequest = new Car();
-
-            CarRequest.Id = Guid.NewGuid();
-            CarRequest.DriverId = CarDto.DriverId;
-            CarRequest.EngineCapacity = CarDto.EngineCapacity;
-            CarRequest.Color = CarDto.Color;
-            CarRequest.Type = CarDto.Type;
-            CarRequest.DailyFare = CarDto.DailyFare;
+            var CarRequest = _mapper.Map<Car>(CarDto);
 
             _RepositoryCar.Create(CarRequest);
 
@@ -92,14 +68,7 @@ namespace CarRentalSystemAPI.Controllers
 
             try
             {
-                Car CarRequest = new Car();
-
-                CarRequest.Id = CarDto.Id;
-                CarRequest.DriverId = CarDto.DriverId;
-                CarRequest.EngineCapacity = CarDto.EngineCapacity;
-                CarRequest.Color = CarDto.Color;
-                CarRequest.Type = CarDto.Type;
-                CarRequest.DailyFare = CarDto.DailyFare;
+                var CarRequest = _mapper.Map<Car>(CarDto);
 
                 var req = _RepositoryCar.Update(CarRequest);
 
@@ -118,14 +87,7 @@ namespace CarRentalSystemAPI.Controllers
         {
             var car = _RepositoryCar.Get(id);
 
-            CarDto objcar = new CarDto();
-
-            objcar.Id = car.Id;
-            objcar.DriverId = car.DriverId;
-            objcar.DailyFare = car.DailyFare;
-            objcar.Color = car.Color;
-            objcar.EngineCapacity = car.EngineCapacity;
-            objcar.Type = car.Type;
+            var objcar = _mapper.Map<CarDto>(car);
 
             _RepositoryCar.Delete(id);
 

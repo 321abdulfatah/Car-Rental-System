@@ -2,6 +2,7 @@ using DataAccessLayer.Data;
 using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Repositories;
 using Microsoft.EntityFrameworkCore;
+using CarRentalSystemAPI.Profiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddAutoMapper(typeof(CarProfile));
+builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<CarRentalDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("sqlcon") ?? throw new InvalidOperationException("Connection string have some issues.")));
