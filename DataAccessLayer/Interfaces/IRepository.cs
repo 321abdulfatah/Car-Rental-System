@@ -1,13 +1,14 @@
-﻿using DataAccessLayer.Models;
+﻿using DataAccessLayer.Common.Models;
+using DataAccessLayer.Models;
 
 namespace DataAccessLayer.Interfaces
 {
     public interface IRepository <T> where T : BaseModel
     {
         public Task<T> Create(T _object);
-        public T Delete(Guid Id);
+        public Task<T> Delete(Guid Id);
         public Task<T> Update(T _object);
-        public IQueryable<T> GetList();
-        public T Get(Guid Id);
+        public PaginatedResult<T> GetList(string Search, string Column, string SortOrder, string OrderBy, int PageIndex, int PageSize);
+        public Task<T> Get(Guid Id);
     }
 }

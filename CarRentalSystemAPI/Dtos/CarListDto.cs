@@ -1,10 +1,9 @@
-﻿using DataAccessLayer.Models;
+﻿using DataAccessLayer.Common.Models;
 
 namespace CarRentalSystemAPI.Dtos
 {
-    public class CarListDto
-    {       
-        public IEnumerable<CarDto> results { get; set; }
+    public class CarListDto : PaginatedResult<CarDto>
+    {
  
     }
 }

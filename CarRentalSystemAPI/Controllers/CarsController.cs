@@ -29,23 +29,18 @@ namespace CarRentalSystemAPI.Controllers
         public CarListDto GetList([FromQuery] CarRequestDto CarDto)//localhost..../api/cars/getcars
         {
 
-            var query = _RepositoryCar.GetList();
-            
-            var sortOrderTerm = (CarDto.sortOrder != "asc") ? " descending" : string.Empty;
-            
-            var finalQuery = String.IsNullOrWhiteSpace(CarDto.orderBy) ? query : query.OrderBy(CarDto.orderBy + sortOrderTerm);
-            
-            var itemsToSkip = (CarDto.currentPage - 1) * CarDto.rowsPerPage;
-                        
-            var result = finalQuery.Skip(itemsToSkip).Take(CarDto.rowsPerPage).ToList();
+            var query = _RepositoryCar.GetList(CarDto.Search, CarDto.Column, CarDto.SortOrder, CarDto.OrderBy, CarDto.PageIndex, CarDto.PageSize);
 
-            var carList = _mapper.Map<IEnumerable<CarDto>>(result);
+            var Lstcar = _mapper.Map<List<CarDto>>(query.Items);
 
-            CarListDto LstCar = new CarListDto();
-            
-            LstCar.results = carList;
+            CarListDto carList =  new CarListDto();
 
-            return LstCar;
+            carList.Items = Lstcar;
+            carList.TotalRows = query.TotalRows;
+            carList.TotalPages = query.TotalPages;
+
+
+            return carList;
         }
 
         // GET: api/<CarsController>
@@ -74,7 +69,7 @@ namespace CarRentalSystemAPI.Controllers
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public UpdateCarDto Update(Guid id, [FromForm] UpdateCarDto CarDto)
+        public UpdateCarDto Update([FromForm] UpdateCarDto CarDto)
         {
 
             try

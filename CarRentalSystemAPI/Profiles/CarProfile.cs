@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using CarRentalSystemAPI.Dtos;
 using DataAccessLayer.Models;
-
+using DataAccessLayer.Common.Models;
 
 namespace CarRentalSystemAPI.Profiles
 {

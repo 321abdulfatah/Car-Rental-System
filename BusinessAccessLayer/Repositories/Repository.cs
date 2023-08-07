@@ -2,6 +2,10 @@
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+using DataAccessLayer.Common.Models;
+using Abp.Domain.Entities;
 
 namespace BusinessAccessLayer.Repositories
 {
@@ -18,22 +22,51 @@ namespace BusinessAccessLayer.Repositories
 
         public async Task<T> Create(T _object)
         {
-            if (_object == null)
+            
+            if (_object != null)
             {
-                throw new ArgumentNullException("entity");
+                _entities.Add(_object); 
+                await _CarRentalDBContext.SaveChangesAsync();
             }
-            _entities.Add(_object);
-            _CarRentalDBContext.SaveChanges();
+
+            else
+                throw new ArgumentNullException("entity");
 
             return _object;
         }
         
-        public IQueryable<T> GetList()
+        public PaginatedResult<T> GetList(string Search, string Column, string SortOrder, string OrderBy, int PageIndex, int PageSize)
         {
             try
             {
 
-                return _entities.AsQueryable();
+                var query = _entities.AsQueryable();
+
+                // 1- Filtering by using where, . . .. 
+                var filterQuery = String.IsNullOrWhiteSpace(Search) ? query : query;//.Where(x => x.Contains(Search)).FirstOrDefault();
+
+                // 2- Get count of query filtered
+                var totalCount = filterQuery.Count();
+
+                //3- Apply sorting
+                var sortOrderTerm = (SortOrder != "asc") ? " descending" : string.Empty;
+
+                var finalQuery = String.IsNullOrWhiteSpace(OrderBy) ? query : query.OrderBy(OrderBy + sortOrderTerm);
+                
+                //4- Apply paging
+                var itemsToSkip = (PageIndex - 1) * PageSize;
+
+                var result = finalQuery.Skip(itemsToSkip).Take(PageSize).ToList();
+
+                //5- Map to output (should contains count and list paginated)
+
+                PaginatedResult<T> res = new PaginatedResult<T>();
+
+                res.TotalRows = totalCount;
+                res.TotalPages = (int)Math.Ceiling((double)totalCount / PageSize);
+                res.Items = result;
+
+                return res;
                 
             }
             catch (Exception)
@@ -42,9 +75,14 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public T Get(Guid Id)
+        public async Task<T> Get(Guid Id)
         {
-            return _entities.SingleOrDefault(s => s.Id == Id);
+            var entity = await _entities.FirstOrDefaultAsync(s => s.Id == Id);
+            if (entity == null)
+            {
+                throw new EntityNotFoundException($"Entity with ID {Id} not found.");
+            }
+            return entity;
         }
 
         public async Task<T> Update(T _object)
@@ -61,14 +99,14 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public T Delete(Guid Id)
+        public async Task<T> Delete(Guid Id)
         {
             try
             {
                 var obj = _entities.SingleOrDefault(x => x.Id == Id);
                      
                 _entities.Remove(obj);
-                _CarRentalDBContext.SaveChangesAsync();
+                await _CarRentalDBContext.SaveChangesAsync();
 
                 return obj;
                 
