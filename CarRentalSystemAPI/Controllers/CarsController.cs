@@ -6,11 +6,13 @@ using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-
+using BusinessAccessLayer.Data.Validate;
+using Microsoft.AspNetCore.Authorization;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace CarRentalSystemAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CarsController : ControllerBase
@@ -76,9 +78,24 @@ namespace CarRentalSystemAPI.Controllers
             }
             var CarRequest = _mapper.Map<Car>(CarDto);
 
-            _RepositoryCar.Create(CarRequest);
+            // Create validator instance (or inject it)
+            var CarValidator = new CarValidator();
 
-            return Ok(new ApiOkResponse(CarDto));
+            // Call Validate or ValidateAsync and pass the object which needs to be validated
+
+            var result = CarValidator.Validate(CarRequest);
+
+            if (result.IsValid)
+            {
+                _RepositoryCar.Create(CarRequest);
+
+                return Ok(new ApiOkResponse(CarDto));
+            }
+
+            var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
+            return BadRequest(errorMessages);
+
+            
         }
 
         // PUT api/<CarsController>/5
