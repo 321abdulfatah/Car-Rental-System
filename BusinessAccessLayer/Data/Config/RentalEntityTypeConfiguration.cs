@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace DataAccessLayer.Data
+namespace BusinessAccessLayer.Data.Config
 {
     public class RentalEntityTypeConfiguration : IEntityTypeConfiguration<Rental>
     {

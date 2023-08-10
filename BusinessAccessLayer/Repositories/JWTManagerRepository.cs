@@ -1,5 +1,8 @@
-﻿using DataAccessLayer.Interfaces;
+﻿using Abp.Domain.Entities;
+using BusinessAccessLayer.Data;
+using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -14,28 +17,29 @@ namespace BusinessAccessLayer.Repositories
 {
 	public class JWTManagerRepository : IJWTManagerRepository
 	{
-		Dictionary<string, string> UsersRecords = new Dictionary<string, string>
-	{
-		{ "user1","password1"},
-		{ "user2","password2"},
-		{ "user3","password3"},
-	};
+		private readonly IConfiguration _iconfiguration;
 
-		private readonly IConfiguration iconfiguration;
-		public JWTManagerRepository(IConfiguration iconfiguration)
+		private readonly CarRentalDBContext _CarRentalDBContext;
+
+		private readonly DbSet<Users> _entities;
+		public JWTManagerRepository(IConfiguration iconfiguration, CarRentalDBContext context)
 		{
-			this.iconfiguration = iconfiguration;
+			_iconfiguration = iconfiguration;
+			_CarRentalDBContext = context ?? throw new ArgumentNullException(nameof(context));
+			_entities = context.Set<Users>();
 		}
+
 		public Tokens Authenticate(Users users)
 		{
-			if (!UsersRecords.Any(x => x.Key == users.Name && x.Value == users.Password))
+			var entity = _entities.FirstOrDefault(s => s.Name == users.Name && s.Password == users.Password);
+			
+			if (entity == null)
 			{
 				return null;
 			}
-
 			// Else we generate JSON Web Token
 			var tokenHandler = new JwtSecurityTokenHandler();
-			var tokenKey = Encoding.UTF8.GetBytes(iconfiguration["JWT:Key"]);
+			var tokenKey = Encoding.UTF8.GetBytes(_iconfiguration["JWT:Key"]);
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(new Claim[]

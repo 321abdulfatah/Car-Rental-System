@@ -1,10 +1,8 @@
-﻿
-namespace DataAccessLayer.Models
+﻿namespace CarRentalSystemAPI.Dtos
 {
-    public class Users : BaseModel
+    public class CreateUsersDto
     {
         public string Name { get; set; }
         public string Password { get; set; }
     }
-
 }

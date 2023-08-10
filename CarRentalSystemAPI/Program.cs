@@ -1,4 +1,4 @@
-using DataAccessLayer.Data;
+using BusinessAccessLayer.Data;
 using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -40,8 +40,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddSingleton<IJWTManagerRepository, JWTManagerRepository > ();
+builder.Services.AddScoped(typeof(IJWTManagerRepository), typeof(JWTManagerRepository));
 builder.Services.AddAutoMapper(typeof(CarProfile));
+//builder.Services.AddAutoMapper(typeof(UsersProfile));
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<CarRentalDBContext>(options =>

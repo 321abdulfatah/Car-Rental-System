@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BusinessAccessLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class createdb : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,7 +20,7 @@ namespace BusinessAccessLayer.Migrations
                     Gender = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
                     Age = table.Column<byte>(type: "tinyint", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Phone = table.Column<int>(type: "int", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
@@ -39,7 +39,7 @@ namespace BusinessAccessLayer.Migrations
                     Gender = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
                     Age = table.Column<byte>(type: "tinyint", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Phone = table.Column<int>(type: "int", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
@@ -48,15 +48,41 @@ namespace BusinessAccessLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Tokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tokens", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Cars",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    DriverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     EngineCapacity = table.Column<double>(type: "float", nullable: false),
                     Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DailyFare = table.Column<double>(type: "float", nullable: false)
+                    DailyFare = table.Column<double>(type: "float", nullable: false),
+                    DriverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -78,7 +104,7 @@ namespace BusinessAccessLayer.Migrations
                     DriverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Rent = table.Column<int>(type: "int", maxLength: 50, nullable: false),
                     StatusRent = table.Column<int>(type: "int", nullable: false),
-                    StratDateRent = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StartDateRent = table.Column<DateTime>(type: "datetime2", nullable: false),
                     RentTerm = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -129,6 +155,12 @@ namespace BusinessAccessLayer.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Rentals");
+
+            migrationBuilder.DropTable(
+                name: "Tokens");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Cars");
