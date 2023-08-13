@@ -3,7 +3,7 @@ using DataAccessLayer.Models;
 
 namespace DataAccessLayer.Interfaces
 {
-    public interface IRepository <T> where T : BaseModel
+    public interface IRepository<T> where T : BaseModel
     {
         public Task<T> Create(T _object);
         public Task<T> Delete(Guid Id);

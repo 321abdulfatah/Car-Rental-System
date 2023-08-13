@@ -38,15 +38,22 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped(typeof(IJWTManagerRepository), typeof(JWTManagerRepository));
-builder.Services.AddAutoMapper(typeof(CarProfile));
-//builder.Services.AddAutoMapper(typeof(UsersProfile));
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<CarRentalDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("sqlcon") ?? throw new InvalidOperationException("Connection string have some issues.")));
+
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
+builder.Services.AddScoped(typeof(IJWTManagerRepository), typeof(JWTManagerRepository));
+builder.Services.AddAutoMapper(typeof(CarProfile));
+builder.Services.AddAutoMapper(typeof(UsersProfile));
+builder.Services.AddScoped<ICarRepository, CarRepository>();
+builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+builder.Services.AddScoped<IRentalRepository, RentalRepository>();
 
 builder.Services.AddMemoryCache();
 

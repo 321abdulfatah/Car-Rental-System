@@ -24,10 +24,10 @@ namespace BusinessAccessLayer.Repositories
 
         public async Task<T> Create(T _object)
         {
-            
+
             if (_object != null)
             {
-                _entities.Add(_object); 
+                _entities.Add(_object);
                 await _CarRentalDBContext.SaveChangesAsync();
             }
 
@@ -36,7 +36,7 @@ namespace BusinessAccessLayer.Repositories
 
             return _object;
         }
-        
+
         public PaginatedResult<T> GetList(string Search, string Column, string SortOrder, string OrderBy, int PageIndex, int PageSize)
         {
             try
@@ -54,7 +54,7 @@ namespace BusinessAccessLayer.Repositories
                 var sortOrderTerm = (SortOrder != "asc") ? " descending" : string.Empty;
 
                 var finalQuery = String.IsNullOrWhiteSpace(OrderBy) ? filterQuery : filterQuery.OrderBy(OrderBy + sortOrderTerm);
-                
+
                 //4- Apply paging
                 var itemsToSkip = (PageIndex - 1) * PageSize;
 
@@ -69,7 +69,7 @@ namespace BusinessAccessLayer.Repositories
                 res.Items = result;
 
                 return res;
-                
+
             }
             catch (Exception)
             {
@@ -79,7 +79,7 @@ namespace BusinessAccessLayer.Repositories
 
         public T Get(Guid Id)
         {
-            var entity =  _entities.FirstOrDefault(s => s.Id == Id);
+            var entity = _entities.FirstOrDefault(s => s.Id == Id);
             if (entity == null)
             {
                 throw new EntityNotFoundException($"Entity with ID {Id} not found.");
@@ -106,12 +106,12 @@ namespace BusinessAccessLayer.Repositories
             try
             {
                 var obj = _entities.SingleOrDefault(x => x.Id == Id);
-                     
+
                 _entities.Remove(obj);
                 await _CarRentalDBContext.SaveChangesAsync();
 
                 return obj;
-                
+
             }
             catch (Exception)
             {

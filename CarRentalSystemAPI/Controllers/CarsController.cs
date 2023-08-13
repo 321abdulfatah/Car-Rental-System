@@ -19,12 +19,13 @@ namespace CarRentalSystemAPI.Controllers
     {
         private readonly IMapper _mapper;
 
-        private readonly IRepository<Car> _RepositoryCar;
-        public CarsController(IRepository<Car> RepositryCar, IMapper mapper)
-        {
-            _RepositoryCar = RepositryCar;
-            _mapper = mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
+
+        public CarsController(IUnitOfWork unitOfWork, IMapper mapper)
+        {
+            _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet("getcars")]
@@ -34,15 +35,19 @@ namespace CarRentalSystemAPI.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var query = _RepositoryCar.GetList(CarDto.Search, CarDto.Column, CarDto.SortOrder, CarDto.OrderBy, CarDto.PageIndex, CarDto.PageSize);
+            var carDetailsList = _unitOfWork.Cars.GetList(CarDto.Search, CarDto.Column, CarDto.SortOrder, CarDto.OrderBy, CarDto.PageIndex, CarDto.PageSize);
+            if (carDetailsList == null)
+            {
+                return NotFound();
+            }
 
-            var Lstcar = _mapper.Map<List<CarDto>>(query.Items);
+            var Lstcar = _mapper.Map<List<CarDto>>(carDetailsList.Items);
 
             CarListDto carList =  new CarListDto();
 
             carList.Items = Lstcar;
-            carList.TotalRows = query.TotalRows;
-            carList.TotalPages = query.TotalPages;
+            carList.TotalRows = carDetailsList.TotalRows;
+            carList.TotalPages = carDetailsList.TotalPages;
 
 
             return Ok(new ApiOkResponse(carList));
@@ -56,7 +61,7 @@ namespace CarRentalSystemAPI.Controllers
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var car = _RepositoryCar.Get(Id);
+            var car = _unitOfWork.Cars.Get(Id);
 
             if (car == null)
             {
@@ -87,7 +92,7 @@ namespace CarRentalSystemAPI.Controllers
 
             if (result.IsValid)
             {
-                _RepositoryCar.Create(CarRequest);
+                _unitOfWork.Cars.Create(CarRequest);
 
                 return Ok(new ApiOkResponse(CarDto));
             }
@@ -109,7 +114,7 @@ namespace CarRentalSystemAPI.Controllers
 
             var CarRequest = _mapper.Map<Car>(CarDto);
 
-            var req = _RepositoryCar.Update(CarRequest);
+            var req = _unitOfWork.Cars.Update(CarRequest);
 
 
             return Ok(new ApiOkResponse(CarDto));
@@ -125,7 +130,7 @@ namespace CarRentalSystemAPI.Controllers
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var car = _RepositoryCar.Get(Id);
+            var car = _unitOfWork.Cars.Get(Id);
 
             if (car == null)
             {
@@ -133,7 +138,7 @@ namespace CarRentalSystemAPI.Controllers
             }
             var objcar = _mapper.Map<CarDto>(car);
 
-            _RepositoryCar.Delete(Id);
+            _unitOfWork.Cars.Delete(Id);
 
             return Ok(new ApiOkResponse(objcar));
         }
