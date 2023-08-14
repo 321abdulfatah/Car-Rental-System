@@ -1,6 +1,6 @@
 ﻿namespace CarRentalSystemAPI.Dtos
 {
-    public class UpdateCarDto : CreateCarDto
+    public class UpdateRentalDto : CreateRentalDto
     {
         public Guid Id { get; set; }
     }
