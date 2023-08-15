@@ -22,22 +22,22 @@ namespace BusinessAccessLayer.Repositories
             _entities = context.Set<T>();
         }
 
-        public async Task<T> Create(T _object)
+        public async Task<T> Create(T obj)
         {
 
-            if (_object != null)
+            if (obj != null)
             {
-                _entities.Add(_object);
+                _entities.Add(obj);
                 await _CarRentalDBContext.SaveChangesAsync();
             }
 
             else
                 throw new ArgumentNullException("entity");
 
-            return _object;
+            return obj;
         }
 
-        public PaginatedResult<T> GetList(string Search, string Column, string SortOrder, string OrderBy, int PageIndex, int PageSize)
+        public PaginatedResult<T> GetList(string search, string column, string sortOrder, string orderBy, int pageIndex, int pageSize)
         {
             try
             {
@@ -45,27 +45,27 @@ namespace BusinessAccessLayer.Repositories
                 var query = _entities.AsQueryable();
 
                 // 1- Filtering by using where, . . .. 
-                var filterQuery = String.IsNullOrWhiteSpace(Column) ? query : String.IsNullOrWhiteSpace(Search) ? query : query = query.Where($"{Column}.Contains(@0)", Search);
+                var filterQuery = String.IsNullOrWhiteSpace(column) ? query : String.IsNullOrWhiteSpace(search) ? query : query = query.Where($"{column}.Contains(@0)", search);
 
                 // 2- Get count of query filtered
                 var totalCount = filterQuery.Count();
 
                 //3- Apply sorting
-                var sortOrderTerm = (SortOrder != "asc") ? " descending" : string.Empty;
+                var sortOrderTerm = (sortOrder != "asc") ? " descending" : string.Empty;
 
-                var finalQuery = String.IsNullOrWhiteSpace(OrderBy) ? filterQuery : filterQuery.OrderBy(OrderBy + sortOrderTerm);
+                var finalQuery = String.IsNullOrWhiteSpace(orderBy) ? filterQuery : filterQuery.OrderBy(orderBy + sortOrderTerm);
 
                 //4- Apply paging
-                var itemsToSkip = (PageIndex - 1) * PageSize;
+                var itemsToSkip = (pageIndex - 1) * pageSize;
 
-                var result = finalQuery.Skip(itemsToSkip).Take(PageSize).ToList();
+                var result = finalQuery.Skip(itemsToSkip).Take(pageSize).ToList();
 
                 //5- Map to output (should contains count and list paginated)
 
                 PaginatedResult<T> res = new PaginatedResult<T>();
 
                 res.TotalRows = totalCount;
-                res.TotalPages = (int)Math.Ceiling((double)totalCount / PageSize);
+                res.TotalPages = (int)Math.Ceiling((double)totalCount / pageSize);
                 res.Items = result;
 
                 return res;
@@ -77,23 +77,23 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public T Get(Guid Id)
+        public async Task<T> Get(Guid id)
         {
-            var entity = _entities.FirstOrDefault(s => s.Id == Id);
+            var entity = await _entities.FirstOrDefaultAsync(s => s.Id == id);
             if (entity == null)
             {
-                throw new EntityNotFoundException($"Entity with ID {Id} not found.");
+                throw new EntityNotFoundException($"Entity with ID {id} not found.");
             }
             return entity;
         }
 
-        public async Task<T> Update(T _object)
+        public async Task<T> Update(T obj)
         {
             try
             {
-                var obj = _entities.Update(_object);
-                if (obj != null) await _CarRentalDBContext.SaveChangesAsync();
-                return _object;
+                var entity = _entities.Update(obj);
+                if (entity != null) await _CarRentalDBContext.SaveChangesAsync();
+                return obj;
             }
             catch (Exception)
             {
@@ -101,11 +101,11 @@ namespace BusinessAccessLayer.Repositories
             }
         }
 
-        public async Task<T> Delete(Guid Id)
+        public async Task<T> Delete(Guid id)
         {
             try
             {
-                var obj = _entities.SingleOrDefault(x => x.Id == Id);
+                var obj = _entities.SingleOrDefault(x => x.Id == id);
 
                 _entities.Remove(obj);
                 await _CarRentalDBContext.SaveChangesAsync();

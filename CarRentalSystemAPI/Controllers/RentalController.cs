@@ -25,24 +25,24 @@ namespace CarRentalSystemAPI.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpGet("getrentals")]
-        public ActionResult<RentalListDto> GetList([FromQuery] RentalRequestDto RentalDto)//localhost..../api/cars/getcars
+        [HttpGet]
+        public ActionResult<RentalListDto> GetList([FromQuery] RentalRequestDto rentalDto)//localhost..../api/cars/getcars
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var rentalDetailsList = _unitOfWork.Rentals.GetList(RentalDto.Search, RentalDto.Column, RentalDto.SortOrder, RentalDto.OrderBy, RentalDto.PageIndex, RentalDto.PageSize);
+            var rentalDetailsList = _unitOfWork.Rentals.GetList(rentalDto.Search, rentalDto.Column, rentalDto.SortOrder, rentalDto.OrderBy, rentalDto.PageIndex, rentalDto.PageSize);
             if (rentalDetailsList == null)
             {
                 return NotFound();
             }
 
-            var Lstrental = _mapper.Map<List<RentalDto>>(rentalDetailsList.Items);
+            var lstRental = _mapper.Map<List<RentalDto>>(rentalDetailsList.Items);
 
             RentalListDto rentalList = new RentalListDto();
 
-            rentalList.Items = Lstrental;
+            rentalList.Items = lstRental;
             rentalList.TotalRows = rentalDetailsList.TotalRows;
             rentalList.TotalPages = rentalDetailsList.TotalPages;
 
@@ -52,77 +52,69 @@ namespace CarRentalSystemAPI.Controllers
 
         // GET: api/<RentalssController>
         [HttpGet("{id}")]
-        public ActionResult<RentalDto> Get(Guid Id)
+        public ActionResult<RentalDto> Get(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var rental = _unitOfWork.Rentals.Get(Id);
+            var rental = _unitOfWork.Rentals.Get(id);
 
-            if (rental == null)
-            {
-                return NotFound(new ApiResponse(404, $"Car not found with id {Id}"));
-            }
-            var objrental = _mapper.Map<RentalDto>(rental);
+            var objRental = _mapper.Map<RentalDto>(rental);
 
-            return Ok(new ApiOkResponse(objrental));
+            return Ok(new ApiOkResponse(objRental));
         }
 
 
         // POST api/<CarsController>
         [HttpPost]
-        public ActionResult<CreateRentalDto> Create([FromForm] CreateRentalDto RentalDto)
+        public ActionResult<CreateRentalDto> Create([FromForm] CreateRentalDto rentalDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var RentalRequest = _mapper.Map<Rental>(RentalDto);
+            var rentalRequest = _mapper.Map<Rental>(rentalDto);
 
-            _unitOfWork.Rentals.Create(RentalRequest);
+            _unitOfWork.Rentals.Create(rentalRequest);
 
-            return Ok(new ApiOkResponse(RentalDto));
+            return Ok(new ApiOkResponse(rentalDto));
            
         }
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public ActionResult<UpdateRentalDto> Update([FromForm] UpdateRentalDto RentalDto)
+        public ActionResult<UpdateRentalDto> Update([FromForm] UpdateRentalDto rentalDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var RentalRequest = _mapper.Map<Rental>(RentalDto);
+            var rentalRequest = _mapper.Map<Rental>(rentalDto);
 
-            _unitOfWork.Rentals.Update(RentalRequest);
+            _unitOfWork.Rentals.Update(rentalRequest);
 
-            return Ok(new ApiOkResponse(RentalDto));
+            return Ok(new ApiOkResponse(rentalDto));
 
         }
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public ActionResult<RentalDto> Delete(Guid Id)
+        public ActionResult<RentalDto> Delete(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var rental = _unitOfWork.Rentals.Get(Id);
+            var rental = _unitOfWork.Rentals.Get(id);
 
-            if (rental == null)
-            {
-                return NotFound(new ApiResponse(404, $"Rental not found with id {Id}"));
-            }
-            var objrental = _mapper.Map<RentalDto>(rental);
+            var objRental = _mapper.Map<RentalDto>(rental);
 
-            _unitOfWork.Rentals.Delete(Id);
+            _unitOfWork.Rentals.Delete(id);
 
-            return Ok(new ApiOkResponse(objrental));
+            return Ok(new ApiOkResponse(objRental));
         }
     }
 }

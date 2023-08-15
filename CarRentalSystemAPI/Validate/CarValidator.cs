@@ -1,9 +1,9 @@
-﻿using FluentValidation;
-using DataAccessLayer.Models;
+﻿using CarRentalSystemAPI.Dtos;
+using FluentValidation;
 
 namespace BusinessAccessLayer.Data.Validate
 {
-    public class CarValidator : AbstractValidator<Car>
+    public class CarValidator : AbstractValidator<CarDto>
     {
         public CarValidator()
         {

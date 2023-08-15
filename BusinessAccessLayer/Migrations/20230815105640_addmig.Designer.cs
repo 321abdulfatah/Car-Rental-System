@@ -4,6 +4,7 @@ using BusinessAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BusinessAccessLayer.Migrations
 {
     [DbContext(typeof(CarRentalDBContext))]
-    partial class CarRentalDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230815105640_addmig")]
+    partial class addmig
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -233,7 +236,8 @@ namespace BusinessAccessLayer.Migrations
                 {
                     b.HasOne("DataAccessLayer.Models.Driver", null)
                         .WithOne("BehalfOfDriver")
-                        .HasForeignKey("DataAccessLayer.Models.Driver", "DriverId");
+                        .HasForeignKey("DataAccessLayer.Models.Driver", "DriverId")
+                        .OnDelete(DeleteBehavior.NoAction);
                 });
 
             modelBuilder.Entity("DataAccessLayer.Models.Rental", b =>

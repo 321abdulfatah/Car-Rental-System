@@ -28,24 +28,24 @@ namespace CarRentalSystemAPI.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpGet("getcars")]
-        public ActionResult<CarListDto> GetList([FromQuery] CarRequestDto CarDto)//localhost..../api/cars/getcars
+        [HttpGet]
+        public ActionResult<CarListDto> GetList([FromQuery] CarRequestDto carDto)//localhost..../api/cars/getcars
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var carDetailsList = _unitOfWork.Cars.GetList(CarDto.Search, CarDto.Column, CarDto.SortOrder, CarDto.OrderBy, CarDto.PageIndex, CarDto.PageSize);
+            var carDetailsList = _unitOfWork.Cars.GetList(carDto.Search, carDto.Column, carDto.SortOrder, carDto.OrderBy, carDto.PageIndex, carDto.PageSize);
             if (carDetailsList == null)
             {
                 return NotFound();
             }
 
-            var Lstcar = _mapper.Map<List<CarDto>>(carDetailsList.Items);
+            var lstCar =  _mapper.Map<List<CarDto>>(carDetailsList.Items);
 
             CarListDto carList =  new CarListDto();
 
-            carList.Items = Lstcar;
+            carList.Items = lstCar;
             carList.TotalRows = carDetailsList.TotalRows;
             carList.TotalPages = carDetailsList.TotalPages;
 
@@ -55,92 +55,88 @@ namespace CarRentalSystemAPI.Controllers
 
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public ActionResult<CarDto> Get(Guid Id)
+        public ActionResult<CarDto> Get(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var car = _unitOfWork.Cars.Get(Id);
+            var car = _unitOfWork.Cars.Get(id);
 
-            if (car == null)
-            {
-                return NotFound(new ApiResponse(404, $"Car not found with id {Id}"));
-            }
-            var objcar = _mapper.Map<CarDto>(car);
+           
+            var objCar = _mapper.Map<CarDto>(car);
 
-            return Ok(new ApiOkResponse(objcar));
+            return Ok(new ApiOkResponse(objCar));
         }
 
 
         // POST api/<CarsController>
         [HttpPost]
-        public ActionResult<CreateCarDto> Create([FromForm] CreateCarDto CarDto)
+        public ActionResult<CarDto> Create([FromForm] CreateCarDto createCarDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var CarRequest = _mapper.Map<Car>(CarDto);
 
-            // Create validator instance (or inject it)
-            var CarValidator = new CarValidator();
+            var carDto = _mapper.Map<CarDto>(createCarDto);
+
+            var carValidator = new CarValidator();
 
             // Call Validate or ValidateAsync and pass the object which needs to be validated
 
-            var result = CarValidator.Validate(CarRequest);
+            var result = carValidator.Validate(carDto);
 
             if (result.IsValid)
             {
-                _unitOfWork.Cars.Create(CarRequest);
 
-                return Ok(new ApiOkResponse(CarDto));
+                var carRequest = _mapper.Map<Car>(carDto);
+
+                _unitOfWork.Cars.Create(carRequest);
+
+                return Ok(new ApiOkResponse(carDto));
             }
 
             var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
             return BadRequest(errorMessages);
-
-            
+                      
         }
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public ActionResult<UpdateCarDto> Update([FromForm] UpdateCarDto CarDto)
+        public ActionResult<UpdateCarDto> Update([FromForm] UpdateCarDto carDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var CarRequest = _mapper.Map<Car>(CarDto);
+            var carRequest = _mapper.Map<Car>(carDto);
 
-            var req = _unitOfWork.Cars.Update(CarRequest);
+            _unitOfWork.Cars.Update(carRequest);
 
 
-            return Ok(new ApiOkResponse(CarDto));
+            return Ok(new ApiOkResponse(carDto));
              
         }
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public ActionResult<CarDto> Delete(Guid Id)
+        public ActionResult<CarDto> Delete(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var car = _unitOfWork.Cars.Get(Id);
+            var car = _unitOfWork.Cars.Get(id);
 
-            if (car == null)
-            {
-                return NotFound(new ApiResponse(404, $"Car not found with id {Id}"));
-            }
-            var objcar = _mapper.Map<CarDto>(car);
+         
+            var objCar = _mapper.Map<CarDto>(car);
 
-            _unitOfWork.Cars.Delete(Id);
+            _unitOfWork.Cars.Delete(id);
 
-            return Ok(new ApiOkResponse(objcar));
+            return Ok(new ApiOkResponse(objCar));
         }
 
     }

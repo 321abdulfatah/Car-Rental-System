@@ -25,24 +25,24 @@ namespace CarRentalSystemAPI.Controllers
             _mapper = mapper;
             _unitOfWork = unitOfWork;
         }
-        [HttpGet("getdrivers")]
-        public ActionResult<DriverListDto> GetList([FromQuery] DriverRequestDto DriverDto)//localhost..../api/cars/getcars
+        [HttpGet]
+        public ActionResult<DriverListDto> GetList([FromQuery] DriverRequestDto driverDto)//localhost..../api/cars/getcars
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var driverDetailsList = _unitOfWork.Drivers.GetList(DriverDto.Search, DriverDto.Column, DriverDto.SortOrder, DriverDto.OrderBy, DriverDto.PageIndex, DriverDto.PageSize);
+            var driverDetailsList = _unitOfWork.Drivers.GetList(driverDto.Search, driverDto.Column, driverDto.SortOrder, driverDto.OrderBy, driverDto.PageIndex, driverDto.PageSize);
             if (driverDetailsList == null)
             {
                 return NotFound();
             }
 
-            var Lstdriver = _mapper.Map<List<DriverDto>>(driverDetailsList.Items);
+            var lstDriver = _mapper.Map<List<DriverDto>>(driverDetailsList.Items);
 
             DriverListDto driverList = new DriverListDto();
 
-            driverList.Items = Lstdriver;
+            driverList.Items = lstDriver;
             driverList.TotalRows = driverDetailsList.TotalRows;
             driverList.TotalPages = driverDetailsList.TotalPages;
 
@@ -52,77 +52,70 @@ namespace CarRentalSystemAPI.Controllers
 
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public ActionResult<DriverDto> Get(Guid Id)
+        public ActionResult<DriverDto> Get(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var driver= _unitOfWork.Drivers.Get(Id);
+            var driver= _unitOfWork.Drivers.Get(id);
 
-            if (driver == null)
-            {
-                return NotFound(new ApiResponse(404, $"Driver not found with id {Id}"));
-            }
-            var objdriver = _mapper.Map<DriverDto>(driver);
+            var objDriver = _mapper.Map<DriverDto>(driver);
 
-            return Ok(new ApiOkResponse(objdriver));
+            return Ok(new ApiOkResponse(objDriver));
         }
 
 
         // POST api/<CarsController>
         [HttpPost]
-        public ActionResult<CreateDriverDto> Create([FromForm] CreateDriverDto DriverDto)
+        public ActionResult<CreateDriverDto> Create([FromForm] CreateDriverDto driverDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var DriverRequest = _mapper.Map<Driver>(DriverDto);
+            var driverRequest = _mapper.Map<Driver>(driverDto);
 
-            _unitOfWork.Drivers.Create(DriverRequest);
+            _unitOfWork.Drivers.Create(driverRequest);
 
-            return Ok(new ApiOkResponse(DriverDto));
+            return Ok(new ApiOkResponse(driverDto));
            
         }
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public ActionResult<UpdateDriverDto> Update([FromForm] UpdateDriverDto DriverDto)
+        public ActionResult<UpdateDriverDto> Update([FromForm] UpdateDriverDto driverDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var DriverRequest = _mapper.Map<Driver>(DriverDto);
+            var driverRequest = _mapper.Map<Driver>(driverDto);
 
-            _unitOfWork.Drivers.Update(DriverRequest);
+            _unitOfWork.Drivers.Update(driverRequest);
 
-            return Ok(new ApiOkResponse(DriverDto));
+            return Ok(new ApiOkResponse(driverDto));
 
         }
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public ActionResult<DriverDto> Delete(Guid Id)
+        public ActionResult<DriverDto> Delete(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var driver = _unitOfWork.Drivers.Get(Id);
+            var driver = _unitOfWork.Drivers.Get(id);
 
-            if (driver == null)
-            {
-                return NotFound(new ApiResponse(404, $"Driver not found with id {Id}"));
-            }
-            var objdriver = _mapper.Map<CarDto>(driver);
+            var objDriver = _mapper.Map<DriverDto>(driver);
 
-            _unitOfWork.Drivers.Delete(Id);
+            _unitOfWork.Drivers.Delete(id);
 
-            return Ok(new ApiOkResponse(objdriver));
+            return Ok(new ApiOkResponse(objDriver));
         }
+
     }
 }

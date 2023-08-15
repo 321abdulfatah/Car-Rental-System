@@ -24,24 +24,24 @@ namespace CarRentalSystemAPI.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpGet("getcustomers")]
-        public ActionResult<CustomerListDto> GetList([FromQuery] CustomerRequestDto CustomerDto)//localhost..../api/cars/getcars
+        [HttpGet]
+        public ActionResult<CustomerListDto> GetList([FromQuery] CustomerRequestDto customerDto)//localhost..../api/cars/getcars
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var customerDetailsList = _unitOfWork.Customers.GetList(CustomerDto.Search, CustomerDto.Column, CustomerDto.SortOrder, CustomerDto.OrderBy, CustomerDto.PageIndex, CustomerDto.PageSize);
+            var customerDetailsList = _unitOfWork.Customers.GetList(customerDto.Search, customerDto.Column, customerDto.SortOrder, customerDto.OrderBy, customerDto.PageIndex, customerDto.PageSize);
             if (customerDetailsList == null)
             {
                 return NotFound();
             }
 
-            var Lstcustomer = _mapper.Map<List<CustomerDto>>(customerDetailsList.Items);
+            var lstCustomer = _mapper.Map<List<CustomerDto>>(customerDetailsList.Items);
 
             CustomerListDto customerList = new CustomerListDto();
 
-            customerList.Items = Lstcustomer;
+            customerList.Items = lstCustomer;
             customerList.TotalRows = customerDetailsList.TotalRows;
             customerList.TotalPages = customerDetailsList.TotalPages;
 
@@ -49,79 +49,67 @@ namespace CarRentalSystemAPI.Controllers
             return Ok(new ApiOkResponse(customerList));
         }
 
-        // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public ActionResult<CustomerDto> Get(Guid Id)
+        public ActionResult<CustomerDto> Get(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var customer = _unitOfWork.Customers.Get(Id);
+            var customer = _unitOfWork.Customers.Get(id);
 
-            if (customer == null)
-            {
-                return NotFound(new ApiResponse(404, $"Customer not found with id {Id}"));
-            }
-            var objcustomer = _mapper.Map<CustomerDto>(customer);
+            var objCustomer = _mapper.Map<CustomerDto>(customer);
 
-            return Ok(new ApiOkResponse(objcustomer));
+            return Ok(new ApiOkResponse(objCustomer));
         }
 
 
-        // POST api/<CarsController>
         [HttpPost]
-        public ActionResult<CreateCustomerDto> Create([FromForm] CreateCustomerDto CustomerDto)
+        public ActionResult<CreateCustomerDto> Create([FromForm] CreateCustomerDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var CustomerRequest = _mapper.Map<Customer>(CustomerDto);
+            var customerRequest = _mapper.Map<Customer>(customerDto);
             
-            _unitOfWork.Customers.Create(CustomerRequest);
+            _unitOfWork.Customers.Create(customerRequest);
 
-            return Ok(new ApiOkResponse(CustomerDto));
+            return Ok(new ApiOkResponse(customerDto));
         }
 
-        // PUT api/<CustomerController>/5
         [HttpPut("{id}")]
-        public ActionResult<UpdateCustomerDto> Update([FromForm] UpdateCustomerDto CustomerDto)
+        public ActionResult<UpdateCustomerDto> Update([FromForm] UpdateCustomerDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var CustomerRequest = _mapper.Map<Customer>(CustomerDto);
+            var customerRequest = _mapper.Map<Customer>(customerDto);
 
-            _unitOfWork.Customers.Update(CustomerRequest);
+            _unitOfWork.Customers.Update(customerRequest);
 
-            return Ok(new ApiOkResponse(CustomerDto));
+            return Ok(new ApiOkResponse(customerDto));
 
         }
 
-        // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public ActionResult<CustomerDto> Delete(Guid Id)
+        public ActionResult<CustomerDto> Delete(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var customer = _unitOfWork.Customers.Get(Id);
+            var customer = _unitOfWork.Customers.Get(id);
 
-            if (customer == null)
-            {
-                return NotFound(new ApiResponse(404, $"Customer not found with id {Id}"));
-            }
-            var objcustomer = _mapper.Map<CarDto>(customer);
+            var objCustomer = _mapper.Map<CarDto>(customer);
 
-            _unitOfWork.Customers.Delete(Id);
+            _unitOfWork.Customers.Delete(id);
 
-            return Ok(new ApiOkResponse(objcustomer));
+            return Ok(new ApiOkResponse(objCustomer));
         }
     }
 }

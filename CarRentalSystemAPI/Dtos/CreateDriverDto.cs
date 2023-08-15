@@ -1,4 +1,6 @@
-﻿namespace CarRentalSystemAPI.Dtos
+﻿using DataAccessLayer.Models;
+
+namespace CarRentalSystemAPI.Dtos
 {
     public class CreateDriverDto
     {
@@ -9,6 +11,7 @@
         public string Phone { get; set; }
         public string Address { get; set; }
         public double Salary { get; set; }
-        public bool isAvailable { get; set; }
+        public bool IsAvailable { get; set; }
+        public Guid? DriverId { get; set; }
     }
 }

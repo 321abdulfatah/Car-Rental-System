@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Data;
+
 namespace BusinessAccessLayer.Repositories
 {
     public class UnitOfWork : IUnitOfWork
@@ -27,9 +28,9 @@ namespace BusinessAccessLayer.Repositories
             Rentals = RentalRepository; 
         }
 
-        public int Save()
+        public async Task<int> SaveAsync()
         {
-            return _dbContext.SaveChanges();
+            return await _dbContext.SaveChangesAsync();
         }
 
         public void Dispose()

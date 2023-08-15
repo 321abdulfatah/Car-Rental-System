@@ -13,120 +13,111 @@ namespace CarRentalSystemAPI.Controllers
     {
 		private readonly IMapper _mapper;
 
-		private readonly IRepository<Users> _RepositoryUsers;
+        private readonly IUnitOfWork _unitOfWork;
 
-		private readonly IJWTManagerRepository _jWTManager;
+        private readonly IJWTManagerRepository _jWTManager;
 
-		public UsersController(IJWTManagerRepository jWTManager, IRepository<Users> RepositoryUsers, IMapper mapper)
+		public UsersController(IJWTManagerRepository jWTManager, IUnitOfWork unitOfWork, IMapper mapper)
 		{
 			_jWTManager = jWTManager;
-			_RepositoryUsers = RepositoryUsers;
-			_mapper = mapper;
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
 		}
 
-        [HttpGet("getusers")]
-        public ActionResult<UsersListDto> GetList([FromQuery] UsersRequestDto UsersDto)
+        [HttpGet]
+        public ActionResult<UsersListDto> GetList([FromQuery] UsersRequestDto usersDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var query = _RepositoryUsers.GetList(UsersDto.Search, UsersDto.Column, UsersDto.SortOrder, UsersDto.OrderBy, UsersDto.PageIndex, UsersDto.PageSize);
+            var query = _unitOfWork.Users.GetList(usersDto.Search, usersDto.Column, usersDto.SortOrder, usersDto.OrderBy, usersDto.PageIndex, usersDto.PageSize);
 
-            var LstUsers= _mapper.Map<List<UsersDto>>(query.Items);
+            var lstUsers= _mapper.Map<List<UsersDto>>(query.Items);
 
-            UsersListDto UsrList = new UsersListDto();
+            UsersListDto usrList = new UsersListDto();
 
-            UsrList.Items = LstUsers;
-            UsrList.TotalRows = query.TotalRows;
-            UsrList.TotalPages = query.TotalPages;
+            usrList.Items = lstUsers;
+            usrList.TotalRows = query.TotalRows;
+            usrList.TotalPages = query.TotalPages;
 
 
-            return Ok(new ApiOkResponse(UsrList));
+            return Ok(new ApiOkResponse(usrList));
         }
 
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public ActionResult<UsersDto> Get(Guid Id)
+        public ActionResult<UsersDto> Get(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var user = _RepositoryUsers.Get(Id);
+            var user = _unitOfWork.Users.Get(id);
 
-            if (user == null)
-            {
-                return NotFound(new ApiResponse(404, $"Car not found with id {Id}"));
-            }
-            var objuser= _mapper.Map<UsersDto>(user);
+            var objUser= _mapper.Map<UsersDto>(user);
 
-            return Ok(new ApiOkResponse(objuser));
+            return Ok(new ApiOkResponse(objUser));
         }
 
 
         // POST api/<CarsController>
         [HttpPost]
-        public ActionResult<CreateUsersDto> Create([FromForm] CreateUsersDto UserDto)
+        public ActionResult<CreateUsersDto> Create([FromForm] CreateUsersDto userDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
-            var UserRequest = _mapper.Map<Users>(UserDto);
+            var userRequest = _mapper.Map<Users>(userDto);
 
-            _RepositoryUsers.Create(UserRequest);
+            _unitOfWork.Users.Create(userRequest);
 
-            return Ok(new ApiOkResponse(UserDto));
+            return Ok(new ApiOkResponse(userDto));
         }
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public ActionResult<UpdateUsersDto> Update([FromForm] UpdateUsersDto UserDto)
+        public ActionResult<UpdateUsersDto> Update([FromForm] UpdateUsersDto userDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var UserRequest = _mapper.Map<Users>(UserDto);
+            var userRequest = _mapper.Map<Users>(userDto);
 
-            var req = _RepositoryUsers.Update(UserRequest);
+            _unitOfWork.Users.Update(userRequest);
 
-
-            return Ok(new ApiOkResponse(UserDto));
+            return Ok(new ApiOkResponse(userDto));
 
         }
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public ActionResult<UsersDto> Delete(Guid Id)
+        public ActionResult<UsersDto> Delete(Guid id)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var car = _RepositoryUsers.Get(Id);
+            var user = _unitOfWork.Users.Get(id);
 
-            if (car == null)
-            {
-                return NotFound(new ApiResponse(404, $"Car not found with id {Id}"));
-            }
-            var objcar = _mapper.Map<CarDto>(car);
+            var objUser = _mapper.Map<UsersDto>(user);
 
-            _RepositoryUsers.Delete(Id);
+            _unitOfWork.Users.Delete(id);
 
-            return Ok(new ApiOkResponse(objcar));
+            return Ok(new ApiOkResponse(objUser));
         }
 
         [HttpPost]
 		[Route("authenticate")]
-		public IActionResult Authenticate([FromForm] UsersDto UserDto)
+		public IActionResult Authenticate([FromForm] UsersDto userDto)
 		{
-            var usersdata = _mapper.Map<Users>(UserDto);
+            var usersData = _mapper.Map<Users>(userDto);
 
-            var token = _jWTManager.Authenticate(usersdata);
+            var token = _jWTManager.Authenticate(usersData);
 
 			if (token == null)
 			{

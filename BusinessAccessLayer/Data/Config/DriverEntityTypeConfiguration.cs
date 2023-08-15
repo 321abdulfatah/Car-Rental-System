@@ -24,8 +24,12 @@ namespace BusinessAccessLayer.Data.Config
 
             builder.Property(b => b.Salary).IsRequired();
             
-            builder.Property(b => b.isAvailable).IsRequired();
+            builder.Property(b => b.IsAvailable).IsRequired();
 
+
+            builder.HasOne<Driver>()
+            .WithOne(d => d.BehalfOfDriver)
+            .HasForeignKey<Driver>(c => c.DriverId).OnDelete(DeleteBehavior.ClientSetNull);
         }
     }
 }
