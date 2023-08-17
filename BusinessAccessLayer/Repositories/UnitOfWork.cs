@@ -28,22 +28,22 @@ namespace BusinessAccessLayer.Repositories
             Rentals = RentalRepository; 
         }
 
-        public async Task<int> SaveAsync()
+        public int Save()
         {
-            return await _dbContext.SaveChangesAsync();
+            return  _dbContext.SaveChanges();
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            DisposeAsync(true);
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual async Task DisposeAsync(bool disposing)
         {
             if (disposing)
             {
-                _dbContext.Dispose();
+                await _dbContext.DisposeAsync();
             }
         }
     }

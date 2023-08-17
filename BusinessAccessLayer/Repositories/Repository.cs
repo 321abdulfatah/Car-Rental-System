@@ -3,11 +3,10 @@ using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using DataAccessLayer.Common.Models;
-using Abp.Domain.Entities;
 using Abp.Linq.Extensions;
 using Abp.Collections.Extensions;
+using Abp.Domain.Entities;
 
 namespace BusinessAccessLayer.Repositories
 {
@@ -22,64 +21,28 @@ namespace BusinessAccessLayer.Repositories
             _entities = context.Set<T>();
         }
 
-        public async Task<T> Create(T obj)
+        public async Task<T> Create(T entity)
         {
 
-            if (obj != null)
+            if (entity != null)
             {
-                _entities.Add(obj);
-                await _CarRentalDBContext.SaveChangesAsync();
+                await _entities.AddAsync(entity);
             }
 
             else
                 throw new ArgumentNullException("entity");
 
-            return obj;
+            return entity;
         }
 
-        public PaginatedResult<T> GetList(string search, string column, string sortOrder, string orderBy, int pageIndex, int pageSize)
+        public async Task<IEnumerable<T>> GetList()
         {
-            try
-            {
-
-                var query = _entities.AsQueryable();
-
-                // 1- Filtering by using where, . . .. 
-                var filterQuery = String.IsNullOrWhiteSpace(column) ? query : String.IsNullOrWhiteSpace(search) ? query : query = query.Where($"{column}.Contains(@0)", search);
-
-                // 2- Get count of query filtered
-                var totalCount = filterQuery.Count();
-
-                //3- Apply sorting
-                var sortOrderTerm = (sortOrder != "asc") ? " descending" : string.Empty;
-
-                var finalQuery = String.IsNullOrWhiteSpace(orderBy) ? filterQuery : filterQuery.OrderBy(orderBy + sortOrderTerm);
-
-                //4- Apply paging
-                var itemsToSkip = (pageIndex - 1) * pageSize;
-
-                var result = finalQuery.Skip(itemsToSkip).Take(pageSize).ToList();
-
-                //5- Map to output (should contains count and list paginated)
-
-                PaginatedResult<T> res = new PaginatedResult<T>();
-
-                res.TotalRows = totalCount;
-                res.TotalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-                res.Items = result;
-
-                return res;
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _entities.ToListAsync();
         }
 
         public async Task<T> Get(Guid id)
         {
-            var entity = await _entities.FirstOrDefaultAsync(s => s.Id == id);
+            var entity = await _entities.FindAsync(id);
             if (entity == null)
             {
                 throw new EntityNotFoundException($"Entity with ID {id} not found.");
@@ -87,36 +50,16 @@ namespace BusinessAccessLayer.Repositories
             return entity;
         }
 
-        public async Task<T> Update(T obj)
+        public void Update(T entity)
         {
-            try
-            {
-                var entity = _entities.Update(obj);
-                if (entity != null) await _CarRentalDBContext.SaveChangesAsync();
-                return obj;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+           _entities.Update(entity);
         }
 
-        public async Task<T> Delete(Guid id)
+        public void Delete(T entity)
         {
-            try
-            {
-                var obj = _entities.SingleOrDefault(x => x.Id == id);
+           _entities.Remove(entity);
+        } 
 
-                _entities.Remove(obj);
-                await _CarRentalDBContext.SaveChangesAsync();
-
-                return obj;
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
+       
     }
 }

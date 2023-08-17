@@ -12,7 +12,8 @@ namespace BusinessAccessLayer.Data.Validate
                 .Must(available => available == true)
                 .WithMessage("The 'Driver' should have an available.");
 
-           
+            RuleFor(x => x.StartDateRent)
+                 .Must(Date => Date >= DateTime.Now);
            
         }
     }

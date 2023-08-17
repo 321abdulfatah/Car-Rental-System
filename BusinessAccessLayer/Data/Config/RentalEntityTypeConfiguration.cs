@@ -12,9 +12,9 @@ namespace BusinessAccessLayer.Data.Config
 
             builder.Property(b => b.CarId).IsRequired();
 
-            builder.Property(b => b.CustomerId).HasMaxLength(50).IsRequired();
+            builder.Property(b => b.CustomerId).IsRequired();
 
-            builder.Property(b => b.Rent).HasMaxLength(50).IsRequired();
+            builder.Property(b => b.Rent).IsRequired();
 
             builder.Property(b => b.StatusRent).IsRequired();
 

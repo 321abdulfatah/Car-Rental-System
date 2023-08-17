@@ -20,7 +20,9 @@ namespace BusinessAccessLayer.Data.Validate
                 .MinimumLength(3)
                 .WithMessage("The 'Password' should have at least 3 characters.")
                 .MaximumLength(10)
-                .WithMessage("The 'Password' should have not more than 10 characters.");
+                .WithMessage("The 'Password' should have not more than 10 characters.")
+                .NotNull()
+                .WithMessage("The 'Password' should have not Null Value");
 
         }
     }

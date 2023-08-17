@@ -12,6 +12,6 @@ namespace DataAccessLayer.Interfaces
         IDriverRepository Drivers { get; }
 
         IRentalRepository Rentals { get; }
-        Task <int> SaveAsync();
+        int Save();
     }
 }
