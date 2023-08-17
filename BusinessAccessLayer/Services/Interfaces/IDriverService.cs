@@ -10,7 +10,7 @@ namespace BusinessAccessLayer.Services.Interfaces
 
         Task<Driver> GetDriverById(Guid driverId);
 
-        Task<bool> UpdateDriver(Customer driver);
+        Task<bool> UpdateDriver(Driver driver);
 
         Task<bool> DeleteDriver(Guid driverId);
     }
