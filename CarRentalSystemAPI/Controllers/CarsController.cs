@@ -14,7 +14,7 @@ using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CarsController : ControllerBase
