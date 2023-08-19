@@ -18,7 +18,9 @@ namespace CarRentalSystemAPI.Profiles
             // get , delete
             CreateMap<DriverDto, Driver>().ReverseMap();
 
-            
+            CreateMap<CreateDriverDto, DriverDto>();
+
+
 
         }
 

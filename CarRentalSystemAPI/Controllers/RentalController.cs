@@ -130,7 +130,7 @@ namespace CarRentalSystemAPI.Controllers
                 return BadRequest(new ApiBadRequestResponse(ModelState));
             }
 
-            var rental = _rentalService.GetRentalById(id);
+            var rental = await _rentalService.GetRentalById(id);
 
             var isRentalDeleted = await _rentalService.DeleteRental(id);
 

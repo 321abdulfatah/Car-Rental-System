@@ -1,4 +1,6 @@
-﻿using DataAccessLayer.Models;
+﻿using DataAccessLayer.Common.Models;
+using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services.Interfaces
 {
@@ -12,6 +14,10 @@ namespace BusinessAccessLayer.Services.Interfaces
 
         Task<bool> UpdateCar(Car car);
 
+        Task<bool> CanDeleteCar(Guid carId);
+
         Task<bool> DeleteCar(Guid carId);
+        
+        Task<PaginatedResult<Car>> GetFilteredAndSortedCars(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
     }
 }

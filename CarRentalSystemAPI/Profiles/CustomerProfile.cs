@@ -18,7 +18,10 @@ namespace CarRentalSystemAPI.Profiles
             // get , delete
             CreateMap<CustomerDto, Customer>().ReverseMap();
 
-            
+            CreateMap<CreateCustomerDto, CustomerDto>();
+
+
+
 
         }
 

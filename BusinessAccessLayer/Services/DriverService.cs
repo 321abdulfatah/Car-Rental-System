@@ -33,7 +33,7 @@ namespace BusinessAccessLayer.Services
             var driverDetails = await _unitOfWork.Drivers.Get(driverId);
             if (driverDetails != null)
             {
-                _unitOfWork.Drivers.Delete(driverDetails);
+                _unitOfWork.Drivers.Delete(driverId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
@@ -60,7 +60,7 @@ namespace BusinessAccessLayer.Services
             return null;
         }
 
-        public async Task<bool> UpdateDriver(Customer driver)
+        public async Task<bool> UpdateDriver(Driver driver)
         {
             if (driver != null)
             {

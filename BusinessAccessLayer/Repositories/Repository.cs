@@ -50,16 +50,22 @@ namespace BusinessAccessLayer.Repositories
             return entity;
         }
 
-        public void Update(T entity)
+        public async Task Update(T entity)
         {
-           _entities.Update(entity);
+            _CarRentalDBContext.Entry(entity).State = EntityState.Modified;
+
+            //_entities.Update(entity);
         }
 
-        public void Delete(T entity)
+        public async Task Delete(Guid id)
         {
-           _entities.Remove(entity);
-        } 
+            var entity = await _entities.FindAsync(id);
 
-       
+            if (entity != null)
+            {
+                _entities.Remove(entity);
+            }
+        }
+
     }
 }

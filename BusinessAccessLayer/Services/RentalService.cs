@@ -33,7 +33,7 @@ namespace BusinessAccessLayer.Services
             var rentalDetails = await _unitOfWork.Rentals.Get(rentalId);
             if (rentalDetails != null)
             {
-                _unitOfWork.Rentals.Delete(rentalDetails);
+                _unitOfWork.Rentals.Delete(rentalId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)

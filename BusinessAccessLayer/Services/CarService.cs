@@ -1,6 +1,8 @@
 ﻿using BusinessAccessLayer.Services.Interfaces;
+using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services
 {
@@ -29,18 +31,33 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
+        public async Task<bool> CanDeleteCar(Guid carId)
+        {
+            bool isRented = await _unitOfWork.Rentals.IsCarRentedAsync(carId);
+            return !isRented;
+        }
         public async Task<bool> DeleteCar(Guid carId)
         {
             var carDetails = await _unitOfWork.Cars.Get(carId);
+            
             if (carDetails != null)
             {
-                _unitOfWork.Cars.Delete(carDetails);
-                var result = _unitOfWork.Save();
+                bool canDelete = await CanDeleteCar(carId);
 
-                if (result > 0)
-                    return true;
+                if (canDelete)
+                {
+                    _unitOfWork.Cars.Delete(carId);
+                    var result = _unitOfWork.Save();
+
+                    if (result > 0)
+                        return true;
+                    else
+                        return false;
+                }
                 else
-                    return false;
+                {
+                    throw new Exception("Car cannot be deleted because it is rented.");
+                }
             }
             return false;
         }
@@ -81,5 +98,12 @@ namespace BusinessAccessLayer.Services
             }
             return false;
         }
+
+        public async Task<PaginatedResult<Car>> GetFilteredAndSortedCars(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        {
+            return await _unitOfWork.Cars.GetSortedFilteredCarsAsync(filter, sortBy, isAscending, pageIndex, pageSize);
+        }
+
+
     }
 }

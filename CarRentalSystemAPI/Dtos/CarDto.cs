@@ -10,6 +10,7 @@ namespace CarRentalSystemAPI.Dtos
         public double DailyFare { get; set; }
         public Guid? DriverId { get; set; }
         public virtual DriverDto Driver { get; set; }
+        public string ErrorMessage { get; set; } = "";
 
 
     }

@@ -33,7 +33,7 @@ namespace BusinessAccessLayer.Services
             var customerDetails = await _unitOfWork.Customers.Get(customerId);
             if (customerDetails != null)
             {
-                _unitOfWork.Customers.Delete(customerDetails);
+                _unitOfWork.Customers.Delete(customerId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)

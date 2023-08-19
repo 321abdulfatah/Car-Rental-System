@@ -8,6 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using CarRentalSystemAPI.Swagger;
+using BusinessAccessLayer.Services.Interfaces;
+using BusinessAccessLayer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,18 +42,33 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
 
+//swagger
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+// unit of work
 builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
+
+// Repos
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IJWTManagerRepository), typeof(JWTManagerRepository));
-builder.Services.AddAutoMapper(typeof(CarProfile));
-builder.Services.AddAutoMapper(typeof(UsersProfile));
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
 
+// Services
+builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IDriverService, DriverService>();
+builder.Services.AddScoped<IRentalService, RentalService>();
+
+// Profiles
+builder.Services.AddAutoMapper(typeof(CarProfile));
+builder.Services.AddAutoMapper(typeof(UsersProfile));
+
+// Set Database
 builder.Services.AddDbContext<CarRentalDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("sqlcon") ?? throw new InvalidOperationException("Connection string have some issues.")));
 
