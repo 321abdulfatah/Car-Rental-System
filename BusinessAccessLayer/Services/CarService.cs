@@ -15,11 +15,11 @@ namespace BusinessAccessLayer.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<bool> CreateCar(Car car)
+        public async Task<bool> CreateCarAsync(Car car)
         {
             if (car != null)
             {
-                await _unitOfWork.Cars.Create(car);
+                await _unitOfWork.Cars.CreateAsync(car);
 
                 var result = _unitOfWork.Save();
 
@@ -31,22 +31,22 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<bool> CanDeleteCar(Guid carId)
+        public async Task<bool> CanDeleteCarAsync(Guid carId)
         {
             bool isRented = await _unitOfWork.Rentals.IsCarRentedAsync(carId);
             return !isRented;
         }
-        public async Task<bool> DeleteCar(Guid carId)
+        public async Task<bool> DeleteCarAsync(Guid carId)
         {
-            var carDetails = await _unitOfWork.Cars.Get(carId);
+            var carDetails = await _unitOfWork.Cars.GetAsync(carId);
             
             if (carDetails != null)
             {
-                bool canDelete = await CanDeleteCar(carId);
+                bool canDelete = await CanDeleteCarAsync(carId);
 
                 if (canDelete)
                 {
-                    _unitOfWork.Cars.Delete(carId);
+                    _unitOfWork.Cars.DeleteAsync(carId);
                     var result = _unitOfWork.Save();
 
                     if (result > 0)
@@ -62,16 +62,16 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<IEnumerable<Car>> GetAllCars()
+        public async Task<IEnumerable<Car>> GetAllCarsAsync()
         {
 
-            var carDetailsList = await _unitOfWork.Cars.GetList();
+            var carDetailsList = await _unitOfWork.Cars.GetAllAsync();
             return carDetailsList;
         }
 
-        public async Task<Car> GetCarById(Guid carId)
+        public async Task<Car> GetCarByIdAsync(Guid carId)
         {
-            var carDetails = await _unitOfWork.Cars.Get(carId);
+            var carDetails = await _unitOfWork.Cars.GetAsync(carId);
             if (carDetails != null)
             {
                 return carDetails;
@@ -79,14 +79,14 @@ namespace BusinessAccessLayer.Services
             return null;
         }
 
-        public async Task<bool> UpdateCar(Car car)
+        public async Task<bool> UpdateCarAsync(Car car)
         {
             if (car!= null)
             {
-                var carItem = await _unitOfWork.Cars.Get(car.Id);
+                var carItem = await _unitOfWork.Cars.GetAsync(car.Id);
                 if (carItem != null)
                 {
-                    _unitOfWork.Cars.Update(carItem);
+                    _unitOfWork.Cars.UpdateAsync(carItem);
 
                     var result = _unitOfWork.Save();
 
@@ -99,11 +99,9 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<PaginatedResult<Car>> GetFilteredAndSortedCars(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        public async Task<PaginatedResult<Car>> GetListCarsAsync(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
         {
-            return await _unitOfWork.Cars.GetSortedFilteredCarsAsync(filter, sortBy, isAscending, pageIndex, pageSize);
+            return await _unitOfWork.Cars.GetListAsync(filter, sortBy, isAscending, pageIndex, pageSize);
         }
-
-
     }
 }

@@ -11,6 +11,8 @@
         public string Address { get; set; }
         public double Salary { get; set; }
         public bool IsAvailable { get; set; }
-        
+        public string ErrorMessage { get; set; } = "";
+
+
     }
 }

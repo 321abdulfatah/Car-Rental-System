@@ -3,7 +3,14 @@
     public class PagingModel<T> where T : class
     {
         private const int MaxPageSize = 10;
-        public int PageIndex { get; set; } = 1;
+
+        private int _pageIndex = 1;
+
+        public int PageIndex
+        {
+            get => _pageIndex; 
+            set => _pageIndex = (value < 1) ? 1 : value; 
+        }
 
         private int _pageSize = 5;
         public int PageSize

@@ -1,17 +1,15 @@
 ﻿using AutoMapper;
 using CarRentalSystemAPI.Dtos;
-using CarRentalSystemAPI.Response;
-using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using BusinessAccessLayer.Data.Validate;
 using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
-
+using DataAccessLayer.Common.Models;
+using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -26,117 +24,151 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetList([FromQuery] CustomerRequestDto customerDto)
+        public async Task<List<CustomerDto>> GetAllCustomersAsync()
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-            var customerDetailsList = await _customerService.GetAllCustomers();
-            if (customerDetailsList == null)
-            {
-                return NotFound();
-            }
+            var customerDetailsList = await _customerService.GetAllCustomersAsync();
+            
+            var customerDtos = _mapper.Map<List<CustomerDto>>(customerDetailsList);
 
-            return Ok(new ApiOkResponse(customerDetailsList));
+            return customerDtos;
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<CustomerDto> GetAsync(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-            var customer = await _customerService.GetCustomerById(id);
+            var customer = await _customerService.GetCustomerByIdAsync(id);
 
-            if (customer != null)
+            if (customer == null)
             {
-                var customerDto = _mapper.Map<CustomerDto>(customer);
+                var errorMessage = "Customer with the specified ID was not found.";
+                return new CustomerDto { ErrorMessage = errorMessage };
+            }
+            var customerDto = _mapper.Map<CustomerDto>(customer);
 
-                return Ok(new ApiOkResponse(customerDto));
-            }
-            else
-            {
-                return BadRequest();
-            }
+            return customerDto;
 
         }
+        [HttpGet]
+        public async Task<PaginatedResult<CustomerDto>> GetListCustomersAsync([FromQuery] CustomerRequestDto customerDto)
+        {
+            Expression<Func<Customer, bool>> filter = customer => true; // Initialize the filter to return all records
 
+            if (!string.IsNullOrEmpty(customerDto.columnName) && !string.IsNullOrEmpty(customerDto.searchTerm))
+            {
+                var propertyInfo = typeof(Customer).GetProperty(customerDto.columnName);
+                if (propertyInfo != null)
+                {
+                    filter = customer => propertyInfo.GetValue(customer).ToString().Contains(customerDto.searchTerm);
+                }
+            }
+
+            else if (!string.IsNullOrWhiteSpace(customerDto.searchTerm))
+            {
+                filter = customer => customer.Name.Contains(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+            }
+
+            var pagedCustomers = await _customerService.GetListCustomersAsync(
+                filter,
+                customerDto.sortBy,
+                customerDto.isAscending,
+                customerDto.PageIndex,
+                customerDto.PageSize
+            );
+
+            var customerDtos = _mapper.Map<List<CustomerDto>>(pagedCustomers.Data);
+
+            var result = new PaginatedResult<CustomerDto>
+            {
+                Data = customerDtos,
+                TotalCount = pagedCustomers.TotalCount
+            };
+            return result;
+        }
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] CreateCustomerDto createCustomerDto)
+        public async Task<CustomerDto> CreateAsync([FromForm] CreateCustomerDto createCustomerDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to create the customer due to a validation error." : errorMessage;
+
+                return new CustomerDto { ErrorMessage = errorMessage };
             }
 
             var customerDto = _mapper.Map<CustomerDto>(createCustomerDto);
 
-            var customerValidator = new CustomerValidator();
-
-            var result = customerValidator.Validate(customerDto);
-
-            if (result.IsValid)
-            {
-
-                var customerRequest = _mapper.Map<Customer>(customerDto);
-
-                var isCustomerCreated = await _customerService.CreateCustomer(customerRequest);
-
-                if (isCustomerCreated)
-                {
-                    return Ok(new ApiOkResponse(customerDto));
-                }
-                else
-                {
-                    return BadRequest();
-                }
-
-            }
-            var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
-            return BadRequest(errorMessages);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromForm] UpdateCustomerDto customerDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-
             var customerRequest = _mapper.Map<Customer>(customerDto);
 
-            var isCustomerUpdated = await _customerService.UpdateCustomer(customerRequest);
-            if (isCustomerUpdated)
+            var isCustomerCreated = await _customerService.CreateCustomerAsync(customerRequest);
+
+            if (isCustomerCreated)
             {
-                return Ok(new ApiOkResponse(customerDto));
-            }
-            return BadRequest();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-
-            var customer = _customerService.GetCustomerById(id);
-
-            var isCustomerDeleted = await _customerService.DeleteCustomer(id);
-
-            if (isCustomerDeleted)
-            {
-                var objCustomer = _mapper.Map<CustomerDto>(customer);
-
-                return Ok(new ApiOkResponse(objCustomer));
+                return customerDto;
             }
             else
             {
-                return BadRequest();
+                var errorMessage = "Failed to create the customer due to a validation error.";
+
+                return new CustomerDto { ErrorMessage = errorMessage };
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<CustomerDto> UpdateAsync(Guid id, [FromForm] UpdateCustomerDto updateCustomerDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to update the customer due to a validation error." : errorMessage;
+
+                return new CustomerDto { ErrorMessage = errorMessage };
+            }
+            
+            var existingCustomer = await _customerService.GetCustomerByIdAsync(id);
+
+            if (existingCustomer == null)
+            {
+                var errorMessage = "Customer with the specified ID was not found.";
+
+                return new CustomerDto { ErrorMessage = errorMessage };
+            }
+
+            var customerDto = _mapper.Map<CustomerDto>(updateCustomerDto);
+
+            var customerRequest = _mapper.Map<Customer>(updateCustomerDto);
+
+            var isCustomerUpdated = await _customerService.UpdateCustomerAsync(customerRequest);
+            if (isCustomerUpdated)
+            {
+                return customerDto;
+            }
+            else
+            {
+                var errorMessage = "Failed to update the customer due to a validation error.";
+
+                return new CustomerDto { ErrorMessage = errorMessage };
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<CustomerDto> DeleteAsync(Guid id)
+        {
+            var customer = _customerService.GetCustomerByIdAsync(id);
+
+            var isCustomerDeleted = await _customerService.DeleteCustomerAsync(id);
+
+            if (isCustomerDeleted)
+            {
+                var customerDto = _mapper.Map<CustomerDto>(customer);
+
+                return customerDto;
+            }
+            else
+            {
+                var errorMessage = "Customer with the specified ID can not delete.";
+                return new CustomerDto { ErrorMessage = errorMessage };
             }
         }
     }

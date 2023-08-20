@@ -1,18 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using CarRentalSystemAPI.Dtos;
-using CarRentalSystemAPI.Response;
-using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using BusinessAccessLayer.Data.Validate;
 using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
+using DataAccessLayer.Common.Models;
+using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class RentalController : ControllerBase
@@ -29,120 +26,152 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetList([FromQuery] RentalRequestDto rentalDto)
+        public async Task<List<RentalDto>> GetAllRentalsAsync()
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-            var rentalDetailsList = await _rentalService.GetAllRental();
-            if (rentalDetailsList == null)
-            {
-                return NotFound();
-            }
+            var rentalDetailsList = await _rentalService.GetAllRentalAsync();
 
-            return Ok(new ApiOkResponse(rentalDetailsList));
+            var rentalDtos = _mapper.Map<List<RentalDto>>(rentalDetailsList);
+
+            return rentalDtos;
         }
 
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<RentalDto> GetAsync(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-            var rental = await _rentalService.GetRentalById(id);
+            var rental = await _rentalService.GetRentalByIdAsync(id);
 
-            if (rental != null)
+            if (rental == null)
             {
-                var rentalDto = _mapper.Map<RentalDto>(rental);
+                var errorMessage = "Rental with the specified ID was not found.";
+                return new RentalDto { ErrorMessage = errorMessage };
+            }
+            var rentalDto = _mapper.Map<RentalDto>(rental);
 
-                return Ok(new ApiOkResponse(rentalDto));
-            }
-            else
-            {
-                return BadRequest();
-            }
+            return rentalDto;
 
         }
 
+        [HttpGet]
+        public async Task<PaginatedResult<RentalDto>> GetListCarsAsync([FromQuery] RentalRequestDto rentalDto)
+        {
+            Expression<Func<Rental, bool>> filter = rental => true; // Initialize the filter to return all records
+
+            if (!string.IsNullOrEmpty(rentalDto.columnName) && !string.IsNullOrEmpty(rentalDto.searchTerm))
+            {
+                var propertyInfo = typeof(Rental).GetProperty(rentalDto.columnName);
+                if (propertyInfo != null)
+                {
+                    filter = rental => propertyInfo.GetValue(rental).ToString().Contains(rentalDto.searchTerm);
+                }
+            }
+
+            var pagedRentals = await _rentalService.GetListRentalsAsync(
+                filter,
+                rentalDto.sortBy,
+                rentalDto.isAscending,
+                rentalDto.PageIndex,
+                rentalDto.PageSize
+            );
+
+            var rentalDtos = _mapper.Map<List<RentalDto>>(pagedRentals.Data);
+
+            var result = new PaginatedResult<RentalDto>
+            {
+                Data = rentalDtos,
+                TotalCount = pagedRentals.TotalCount
+            };
+            return result;
+        }
+
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] CreateRentalDto createRentalDto)
+        public async Task<RentalDto> CreateAsync([FromForm] CreateRentalDto createRentalDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to create the rental due to a validation error." : errorMessage;
+
+                return new RentalDto { ErrorMessage = errorMessage };
             }
 
             var rentalDto = _mapper.Map<RentalDto>(createRentalDto);
 
-            var rentalValidator = new RentalValidator();
+            var rentalRequest = _mapper.Map<Rental>(rentalDto);
 
-            var result = rentalValidator.Validate(rentalDto);
+            var isRentalCreated = await _rentalService.CreateRentalAsync(rentalRequest);
 
-            if (result.IsValid)
+            if (isRentalCreated)
             {
-
-                var rentalRequest = _mapper.Map<Rental>(rentalDto);
-
-                var isRentalCreated = await _rentalService.CreateRental(rentalRequest);
-
-                if (isRentalCreated)
-                {
-                    return Ok(new ApiOkResponse(rentalDto));
-                }
-                else
-                {
-                    return BadRequest();
-                }
-
+                return rentalDto;
             }
-            var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
-            return BadRequest(errorMessages);
+            else
+            {
+                var errorMessage = "Failed to create the rental due to a validation error.";
+
+                return new RentalDto { ErrorMessage = errorMessage };
+            }
+
         }
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromForm] UpdateRentalDto rentalDto)
+        public async Task<RentalDto> UpdateAsync(Guid id, [FromForm] UpdateRentalDto updateRentalDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to update the rental due to a validation error." : errorMessage;
+
+                return new RentalDto { ErrorMessage = errorMessage };
             }
 
-            var rentalRequest = _mapper.Map<Rental>(rentalDto);
+            var existingRental = await _rentalService.GetRentalByIdAsync(id);
 
-            var isRentalUpdated = await _rentalService.UpdateRental(rentalRequest);
+            if (existingRental == null)
+            {
+                var errorMessage = "Rental with the specified ID was not found.";
+
+                return new RentalDto { ErrorMessage = errorMessage };
+            }
+
+            var rentalDto = _mapper.Map<RentalDto>(updateRentalDto);
+
+            var rentalRequest = _mapper.Map<Rental>(updateRentalDto);
+
+            var isRentalUpdated = await _rentalService.UpdateRentalAsync(rentalRequest);
             if (isRentalUpdated)
             {
-                return Ok(new ApiOkResponse(rentalDto));
+                return rentalDto;
             }
-            return BadRequest();
+            else
+            {
+                var errorMessage = "Failed to update the rental due to a validation error.";
+
+                return new RentalDto { ErrorMessage = errorMessage };
+            }
         }
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<RentalDto> DeleteAsync(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
+            var rental = await _rentalService.GetRentalByIdAsync(id);
 
-            var rental = await _rentalService.GetRentalById(id);
-
-            var isRentalDeleted = await _rentalService.DeleteRental(id);
+            var isRentalDeleted = await _rentalService.DeleteRentalAsync(id);
 
             if (isRentalDeleted)
             {
-                var objRental = _mapper.Map<RentalDto>(rental);
+                var rentalDto = _mapper.Map<RentalDto>(rental);
 
-                return Ok(new ApiOkResponse(objRental));
+                return rentalDto;
             }
             else
             {
-                return BadRequest();
+                var errorMessage = "Rental with the specified ID can not delete.";
+                return new RentalDto { ErrorMessage = errorMessage };
             }
         }
     }

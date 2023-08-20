@@ -1,16 +1,11 @@
 ﻿using AutoMapper;
 using CarRentalSystemAPI.Dtos;
-using CarRentalSystemAPI.Response;
-using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using BusinessAccessLayer.Data.Validate;
 using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using System.Linq.Expressions;
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace CarRentalSystemAPI.Controllers
 {
@@ -30,10 +25,9 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<List<CarDto>> GetList()//localhost..../api/cars/getcars
+        public async Task<List<CarDto>> GetAllCarsAsync()//localhost..../api/cars/getcars
         {
-
-            var carDetailsList = await _carService.GetAllCars();
+            var carDetailsList = await _carService.GetAllCarsAsync();
            
             var carDtos = _mapper.Map<List<CarDto>>(carDetailsList);
 
@@ -42,9 +36,9 @@ namespace CarRentalSystemAPI.Controllers
 
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public async Task<CarDto> Get(Guid id)
+        public async Task<CarDto> GetAsync(Guid id)
         {
-            var car = await _carService.GetCarById(id);
+            var car = await _carService.GetCarByIdAsync(id);
 
             if (car == null)
             {
@@ -56,17 +50,26 @@ namespace CarRentalSystemAPI.Controllers
             return carDto;
         }
 
-        [HttpGet("filtered-sorted")]
-        public async Task<PaginatedResult<CarDto>> GetFilteredAndSortedCars([FromQuery] CarRequestDto carDto)
+        [HttpGet]
+        public async Task<PaginatedResult<CarDto>> GetListCarsAsync([FromQuery] CarRequestDto carDto)
         {
             Expression<Func<Car, bool>> filter = car => true; // Initialize the filter to return all records
 
-            if (!string.IsNullOrWhiteSpace(carDto.searchTerm))
+            if (!string.IsNullOrEmpty(carDto.columnName) && !string.IsNullOrEmpty(carDto.searchTerm))
+            {
+                var propertyInfo = typeof(Car).GetProperty(carDto.columnName);
+                if (propertyInfo != null)
+                {
+                    filter = car => propertyInfo.GetValue(car).ToString().Contains(carDto.searchTerm);
+                }
+            }
+
+            else if (!string.IsNullOrWhiteSpace(carDto.searchTerm))
             {
                 filter = car => car.Type.Contains(carDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
             }
 
-            var pagedCars = await _carService.GetFilteredAndSortedCars(
+            var pagedCars = await _carService.GetListCarsAsync(
                 filter,
                 carDto.sortBy,
                 carDto.isAscending,
@@ -83,41 +86,34 @@ namespace CarRentalSystemAPI.Controllers
             };
             return result;
         }
+
         // POST api/<CarsController>
         [HttpPost]
-        public async Task<CarDto> Create([FromForm] CreateCarDto createCarDto)
+        public async Task<CarDto> CreateAsync([FromForm] CreateCarDto createCarDto)
         {
-            
+
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to create the car due to a validation error." : errorMessage;
+
+                return new CarDto { ErrorMessage = errorMessage };
+            }
+
             var carDto = _mapper.Map<CarDto>(createCarDto);
 
-            var carValidator = new CarValidator();
+            var carRequest = _mapper.Map<Car>(carDto);
 
-            // Call Validate or ValidateAsync and pass the object which needs to be validated
+            var isCarCreated = await _carService.CreateCarAsync(carRequest);
 
-            var result = carValidator.Validate(carDto);
-
-            if (result.IsValid)
+            if (isCarCreated)
             {
-
-                var carRequest = _mapper.Map<Car>(carDto);
-
-                var isCarCreated = await _carService.CreateCar(carRequest);
-
-                if (isCarCreated)
-                {
-                    return carDto;
-                }
-                else
-                {
-                    var errorMessage = "Failed to create the car due to a validation error.";
-
-                    return new CarDto { ErrorMessage = errorMessage };
-                }
-
+                return carDto;
             }
             else
             {
-                var errorMessage = result.Errors.Select(x => x.ErrorMessage).ToString();
+                var errorMessage = "Failed to create the car due to a validation error.";
 
                 return new CarDto { ErrorMessage = errorMessage };
             }
@@ -125,9 +121,18 @@ namespace CarRentalSystemAPI.Controllers
 
         // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public async Task<CarDto> Update(Guid id,[FromForm] UpdateCarDto updateCarDto)
+        public async Task<CarDto> UpdateAsync(Guid id,[FromForm] UpdateCarDto updateCarDto)
         {
-            var existingCar = await _carService.GetCarById(id);
+            if (!ModelState.IsValid)
+            {
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to update the car due to a validation error." : errorMessage;
+
+                return new CarDto { ErrorMessage = errorMessage };
+            }
+
+            var existingCar = await _carService.GetCarByIdAsync(id);
 
             if (existingCar == null)
             {
@@ -138,33 +143,17 @@ namespace CarRentalSystemAPI.Controllers
 
             var carDto = _mapper.Map<CarDto>(updateCarDto);
 
-            var carValidator = new CarValidator();
+            
+            var carRequest = _mapper.Map<Car>(updateCarDto);
 
-            // Call Validate or ValidateAsync and pass the object which needs to be validated
-
-            var result = carValidator.Validate(carDto);
-
-            if (result.IsValid)
+            var isCarUpdated = await _carService.UpdateCarAsync(carRequest);
+            if (isCarUpdated)
             {
-
-                var carRequest = _mapper.Map<Car>(updateCarDto);
-
-                var isCarUpdated = await _carService.UpdateCar(carRequest);
-                if (isCarUpdated)
-                {
-                    return carDto;
-                }
-                else
-                {
-                    var errorMessage = "Failed to update the car due to a validation error.";
-
-                    return new CarDto { ErrorMessage = errorMessage };
-                }
-
+                return carDto;
             }
             else
             {
-                var errorMessage = result.Errors.Select(x => x.ErrorMessage).ToString();
+                var errorMessage = "Failed to update the car due to a validation error.";
 
                 return new CarDto { ErrorMessage = errorMessage };
             }
@@ -172,11 +161,11 @@ namespace CarRentalSystemAPI.Controllers
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public async Task<CarDto> Delete(Guid id)
+        public async Task<CarDto> DeleteAsync(Guid id)
         {
-            var car = await _carService.GetCarById(id);
+            var car = await _carService.GetCarByIdAsync(id);
 
-            var isCarDeleted = await _carService.DeleteCar(id);
+            var isCarDeleted = await _carService.DeleteCarAsync(id);
 
             if (isCarDeleted)
             {

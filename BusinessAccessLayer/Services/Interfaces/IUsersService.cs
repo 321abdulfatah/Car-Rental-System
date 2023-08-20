@@ -1,18 +1,21 @@
-﻿using DataAccessLayer.Models;
-
+﻿using DataAccessLayer.Common.Models;
+using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services.Interfaces
 {
     public interface IUsersService
     {
-        Task<bool> CreateUsers(Users users);
+        Task<bool> CreateUsersAsync(Users users);
 
-        Task<IEnumerable<Users>> GetAllUsers();
+        Task<IEnumerable<Users>> GetAllUsersAsync();
 
-        Task<Users> GetUsersById(Guid usersId);
+        Task<Users> GetUsersByIdAsync(Guid usersId);
 
-        Task<bool> UpdateUsers(Users users);
+        Task<bool> UpdateUsersAsync(Users users);
 
-        Task<bool> DeleteUsers(Guid usersId);
+        Task<bool> DeleteUsersAsync(Guid usersId);
+        Task<PaginatedResult<Users>> GetListUsersAsync(Expression<Func<Users, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
+
     }
 }

@@ -18,7 +18,7 @@ namespace BusinessAccessLayer.Repositories
 
       
 
-        public async Task<PaginatedResult<Car>> GetSortedFilteredCarsAsync(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        public async Task<PaginatedResult<Car>> GetListAsync(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
         {
             var query = _dbContext.Cars.Where(filter);
 

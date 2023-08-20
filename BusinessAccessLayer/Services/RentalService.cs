@@ -1,6 +1,8 @@
 ﻿using BusinessAccessLayer.Services.Interfaces;
+using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services
 {
@@ -12,11 +14,11 @@ namespace BusinessAccessLayer.Services
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task<bool> CreateRental(Rental rental)
+        public async Task<bool> CreateRentalAsync(Rental rental)
         {
             if (rental != null)
             {
-                await _unitOfWork.Rentals.Create(rental);
+                await _unitOfWork.Rentals.CreateAsync(rental);
 
                 var result = _unitOfWork.Save();
 
@@ -28,12 +30,12 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<bool> DeleteRental(Guid rentalId)
+        public async Task<bool> DeleteRentalAsync(Guid rentalId)
         {
-            var rentalDetails = await _unitOfWork.Rentals.Get(rentalId);
+            var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId);
             if (rentalDetails != null)
             {
-                _unitOfWork.Rentals.Delete(rentalId);
+                _unitOfWork.Rentals.DeleteAsync(rentalId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
@@ -44,15 +46,15 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<IEnumerable<Rental>> GetAllRental()
+        public async Task<IEnumerable<Rental>> GetAllRentalAsync()
         {
-            var rentalDetailsList = await _unitOfWork.Rentals.GetList();
+            var rentalDetailsList = await _unitOfWork.Rentals.GetAllAsync();
             return rentalDetailsList;
         }
 
-        public async Task<Rental> GetRentalById(Guid rentalId)
+        public async Task<Rental> GetRentalByIdAsync(Guid rentalId)
         {
-            var rentalDetails = await _unitOfWork.Rentals.Get(rentalId);
+            var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId);
             if (rentalDetails != null)
             {
                 return rentalDetails;
@@ -60,14 +62,14 @@ namespace BusinessAccessLayer.Services
             return null;
         }
 
-        public async Task<bool> UpdateRental(Rental rental)
+        public async Task<bool> UpdateRentalAsync(Rental rental)
         {
             if (rental != null)
             {
-                var rentalItem = await _unitOfWork.Rentals.Get(rental.Id);
+                var rentalItem = await _unitOfWork.Rentals.GetAsync(rental.Id);
                 if (rentalItem != null)
                 {
-                    _unitOfWork.Rentals.Update(rentalItem);
+                    _unitOfWork.Rentals.UpdateAsync(rentalItem);
 
                     var result = _unitOfWork.Save();
 
@@ -78,6 +80,10 @@ namespace BusinessAccessLayer.Services
                 }
             }
             return false;
+        }
+        public async Task<PaginatedResult<Rental>> GetListRentalsAsync(Expression<Func<Rental, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        {
+            return await _unitOfWork.Rentals.GetListAsync(filter, sortBy, isAscending, pageIndex, pageSize);
         }
     }
 }

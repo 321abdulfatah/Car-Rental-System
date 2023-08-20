@@ -1,5 +1,4 @@
-﻿
-namespace DataAccessLayer.Interfaces
+﻿namespace DataAccessLayer.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {

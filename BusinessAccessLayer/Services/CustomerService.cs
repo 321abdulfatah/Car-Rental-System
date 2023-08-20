@@ -1,6 +1,8 @@
 ﻿using BusinessAccessLayer.Services.Interfaces;
+using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services
 {
@@ -12,11 +14,11 @@ namespace BusinessAccessLayer.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<bool> CreateCustomer(Customer customer)
+        public async Task<bool> CreateCustomerAsync(Customer customer)
         {
             if (customer != null)
             {
-                await _unitOfWork.Customers.Create(customer);
+                await _unitOfWork.Customers.CreateAsync(customer);
 
                 var result = _unitOfWork.Save();
 
@@ -28,12 +30,12 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<bool> DeleteCustomer(Guid customerId)
+        public async Task<bool> DeleteCustomerAsync(Guid customerId)
         {
-            var customerDetails = await _unitOfWork.Customers.Get(customerId);
+            var customerDetails = await _unitOfWork.Customers.GetAsync(customerId);
             if (customerDetails != null)
             {
-                _unitOfWork.Customers.Delete(customerId);
+                _unitOfWork.Customers.DeleteAsync(customerId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
@@ -44,15 +46,15 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<IEnumerable<Customer>> GetAllCustomers()
+        public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
         {
-            var customerDetailsList = await _unitOfWork.Customers.GetList();
+            var customerDetailsList = await _unitOfWork.Customers.GetAllAsync();
             return customerDetailsList;
         }
 
-        public async Task<Customer> GetCustomerById(Guid customerId)
+        public async Task<Customer> GetCustomerByIdAsync(Guid customerId)
         {
-            var customerDetails = await _unitOfWork.Customers.Get(customerId);
+            var customerDetails = await _unitOfWork.Customers.GetAsync(customerId);
             if (customerDetails != null)
             {
                 return customerDetails;
@@ -60,14 +62,14 @@ namespace BusinessAccessLayer.Services
             return null;
         }
 
-        public async Task<bool> UpdateCustomer(Customer customer)
+        public async Task<bool> UpdateCustomerAsync(Customer customer)
         {
             if (customer != null)
             {
-                var customerItem = await _unitOfWork.Customers.Get(customer.Id);
+                var customerItem = await _unitOfWork.Customers.GetAsync(customer.Id);
                 if (customerItem != null)
                 {
-                    _unitOfWork.Customers.Update(customerItem);
+                    _unitOfWork.Customers.UpdateAsync(customerItem);
 
                     var result = _unitOfWork.Save();
 
@@ -78,6 +80,11 @@ namespace BusinessAccessLayer.Services
                 }
             }
             return false;
+        }
+
+        public async Task<PaginatedResult<Customer>> GetListCustomersAsync(Expression<Func<Customer, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        {
+            return await _unitOfWork.Customers.GetListAsync(filter, sortBy, isAscending, pageIndex, pageSize);
         }
     }
 }

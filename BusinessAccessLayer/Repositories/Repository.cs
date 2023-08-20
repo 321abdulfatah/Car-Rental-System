@@ -2,10 +2,6 @@
 using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using DataAccessLayer.Common.Models;
-using Abp.Linq.Extensions;
-using Abp.Collections.Extensions;
 using Abp.Domain.Entities;
 
 namespace BusinessAccessLayer.Repositories
@@ -21,7 +17,7 @@ namespace BusinessAccessLayer.Repositories
             _entities = context.Set<T>();
         }
 
-        public async Task<T> Create(T entity)
+        public async Task<T> CreateAsync(T entity)
         {
 
             if (entity != null)
@@ -35,12 +31,12 @@ namespace BusinessAccessLayer.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<T>> GetList()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _entities.ToListAsync();
         }
 
-        public async Task<T> Get(Guid id)
+        public async Task<T> GetAsync(Guid id)
         {
             var entity = await _entities.FindAsync(id);
             if (entity == null)
@@ -50,14 +46,14 @@ namespace BusinessAccessLayer.Repositories
             return entity;
         }
 
-        public async Task Update(T entity)
+        public async Task UpdateAsync(T entity)
         {
             _CarRentalDBContext.Entry(entity).State = EntityState.Modified;
 
             //_entities.Update(entity);
         }
 
-        public async Task Delete(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
             var entity = await _entities.FindAsync(id);
 
@@ -66,6 +62,5 @@ namespace BusinessAccessLayer.Repositories
                 _entities.Remove(entity);
             }
         }
-
     }
 }

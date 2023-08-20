@@ -1,5 +1,4 @@
-﻿
-namespace CarRentalSystemAPI.Dtos
+﻿namespace CarRentalSystemAPI.Dtos
 {
     public class CarDto
     {

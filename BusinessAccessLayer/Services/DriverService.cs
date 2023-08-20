@@ -1,6 +1,8 @@
 ﻿using BusinessAccessLayer.Services.Interfaces;
+using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services
 {
@@ -12,11 +14,11 @@ namespace BusinessAccessLayer.Services
         {
             _unitOfWork = unitOfWork;
         }
-        public async Task<bool> CreateDriver(Driver driver)
+        public async Task<bool> CreateDriverAsync(Driver driver)
         {
             if (driver != null)
             {
-                await _unitOfWork.Drivers.Create(driver);
+                await _unitOfWork.Drivers.CreateAsync(driver);
 
                 var result = _unitOfWork.Save();
 
@@ -28,12 +30,12 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<bool> DeleteDriver(Guid driverId)
+        public async Task<bool> DeleteDriverAsync(Guid driverId)
         {
-            var driverDetails = await _unitOfWork.Drivers.Get(driverId);
+            var driverDetails = await _unitOfWork.Drivers.GetAsync(driverId);
             if (driverDetails != null)
             {
-                _unitOfWork.Drivers.Delete(driverId);
+                _unitOfWork.Drivers.DeleteAsync(driverId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
@@ -44,15 +46,15 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<IEnumerable<Driver>> GetAllDriver()
+        public async Task<IEnumerable<Driver>> GetAllDriverAsync()
         {
-            var driverDetailsList = await _unitOfWork.Drivers.GetList();
+            var driverDetailsList = await _unitOfWork.Drivers.GetAllAsync();
             return driverDetailsList;
         }
 
-        public async Task<Driver> GetDriverById(Guid driverId)
+        public async Task<Driver> GetDriverByIdAsync(Guid driverId)
         {
-            var driverDetails = await _unitOfWork.Drivers.Get(driverId);
+            var driverDetails = await _unitOfWork.Drivers.GetAsync(driverId);
             if (driverDetails != null)
             {
                 return driverDetails;
@@ -60,14 +62,14 @@ namespace BusinessAccessLayer.Services
             return null;
         }
 
-        public async Task<bool> UpdateDriver(Driver driver)
+        public async Task<bool> UpdateDriverAsync(Driver driver)
         {
             if (driver != null)
             {
-                var driverItem = await _unitOfWork.Drivers.Get(driver.Id);
+                var driverItem = await _unitOfWork.Drivers.GetAsync(driver.Id);
                 if (driverItem != null)
                 {
-                    _unitOfWork.Drivers.Update(driverItem);
+                    _unitOfWork.Drivers.UpdateAsync(driverItem);
 
                     var result = _unitOfWork.Save();
 
@@ -78,6 +80,10 @@ namespace BusinessAccessLayer.Services
                 }
             }
             return false;
+        }
+        public async Task<PaginatedResult<Driver>> GetListDriversAsync(Expression<Func<Driver, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        {
+            return await _unitOfWork.Drivers.GetListAsync(filter, sortBy, isAscending, pageIndex, pageSize);
         }
     }
 }

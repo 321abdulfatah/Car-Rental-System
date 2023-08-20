@@ -1,14 +1,16 @@
 ﻿using AutoMapper;
-using BusinessAccessLayer.Data.Validate;
 using BusinessAccessLayer.Services.Interfaces;
 using CarRentalSystemAPI.Dtos;
-using CarRentalSystemAPI.Response;
+using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -27,124 +29,154 @@ namespace CarRentalSystemAPI.Controllers
 		}
 
         [HttpGet]
-        public async Task<IActionResult> GetList([FromQuery] UsersRequestDto usersDto)//localhost..../api/cars/getcars
+        public async Task<List<UsersDto>> GetAllUsersAsync()
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-            var carDetailsList = await _usersService.GetAllUsers();
-            if (carDetailsList == null)
-            {
-                return NotFound();
-            }
+            var usersDetailsList = await _usersService.GetAllUsersAsync();
 
-            return Ok(new ApiOkResponse(carDetailsList));
+            var usersDtos = _mapper.Map<List<UsersDto>>(usersDetailsList);
+
+            return usersDtos;
         }
 
         // GET: api/<CarsController>
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<UsersDto> GetAsync(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
-            var user = await _usersService.GetUsersById(id);
+            var user = await _usersService.GetUsersByIdAsync(id);
 
-            if (user != null)
+            if (user == null)
             {
-                var userDto = _mapper.Map<UsersDto>(user);
-
-                return Ok(new ApiOkResponse(userDto));
+                var errorMessage = "User with the specified ID was not found.";
+                return new UsersDto { ErrorMessage = errorMessage };
             }
-            else
-            {
-                return BadRequest();
-            }
+            var userDto = _mapper.Map<UsersDto>(user);
 
+            return userDto;
         }
 
+        [HttpGet]
+        public async Task<PaginatedResult<UsersDto>> GetListCarsAsync([FromQuery] UsersRequestDto userDto)
+        {
+            Expression<Func<Users, bool>> filter = user => true; // Initialize the filter to return all records
 
-        // POST api/<CarsController>
+            if (!string.IsNullOrEmpty(userDto.columnName) && !string.IsNullOrEmpty(userDto.searchTerm))
+            {
+                var propertyInfo = typeof(Users).GetProperty(userDto.columnName);
+                if (propertyInfo != null)
+                {
+                    filter = user => propertyInfo.GetValue(user).ToString().Contains(userDto.searchTerm);
+                }
+            }
+
+            else if (!string.IsNullOrWhiteSpace(userDto.searchTerm))
+            {
+                filter = user => user.Name.Contains(userDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+            }
+
+            var pagedUsers = await _usersService.GetListUsersAsync(
+                filter,
+                userDto.sortBy,
+                userDto.isAscending,
+                userDto.PageIndex,
+                userDto.PageSize
+            );
+
+            var userDtos = _mapper.Map<List<UsersDto>>(pagedUsers.Data);
+
+            var result = new PaginatedResult<UsersDto>
+            {
+                Data = userDtos,
+                TotalCount = pagedUsers.TotalCount
+            };
+            return result;
+        }
+
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] CreateUsersDto createUserDto)
+        public async Task<UsersDto> CreateAsync([FromForm] CreateUsersDto createUserDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to create the user due to a validation error." : errorMessage;
+
+                return new UsersDto { ErrorMessage = errorMessage };
             }
 
             var userDto = _mapper.Map<UsersDto>(createUserDto);
 
-            var userValidator = new UsersValidator();
+            var userRequest = _mapper.Map<Users>(userDto);
 
-            // Call Validate or ValidateAsync and pass the object which needs to be validated
+            var isUserCreated = await _usersService.CreateUsersAsync(userRequest);
 
-            var result = userValidator.Validate(userDto);
-
-            if (result.IsValid)
+            if (isUserCreated)
             {
-
-                var userRequest = _mapper.Map<Users>(userDto);
-
-                var isUserCreated = await _usersService.CreateUsers(userRequest);
-
-                if (isUserCreated)
-                {
-                    return Ok(new ApiOkResponse(userDto));
-                }
-                else
-                {
-                    return BadRequest();
-                }
-
+                return userDto;
             }
-            var errorMessages = result.Errors.Select(x => x.ErrorMessage).ToList();
-            return BadRequest(errorMessages);
+            else
+            {
+                var errorMessage = "Failed to create the user due to a validation error.";
+
+                return new UsersDto { ErrorMessage = errorMessage };
+            }
         }
 
-        // PUT api/<CarsController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update([FromForm] UpdateUsersDto userDto)
+        public async Task<UsersDto> UpdateAsync(Guid id, [FromForm] UpdateUsersDto updateUserDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
+                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
+
+                errorMessage = (errorMessage == null) ? "Failed to update the user due to a validation error." : errorMessage;
+
+                return new UsersDto { ErrorMessage = errorMessage };
             }
 
-            var userRequest = _mapper.Map<Users>(userDto);
+            var existingUser= await _usersService.GetUsersByIdAsync(id);
 
-            var isUserUpdated = await _usersService.UpdateUsers(userRequest);
-            if (isUserUpdated)
+            if (existingUser == null)
             {
-                return Ok(new ApiOkResponse(userDto));
+                var errorMessage = "User with the specified ID was not found.";
+
+                return new UsersDto { ErrorMessage = errorMessage };
             }
-            return BadRequest();
+
+            var userDto = _mapper.Map<UsersDto>(updateUserDto);
+
+            var userRequest = _mapper.Map<Users>(updateUserDto);
+
+            var isuserUpdated = await _usersService.UpdateUsersAsync(userRequest);
+            if (isuserUpdated)
+            {
+                return userDto;
+            }
+            else
+            {
+                var errorMessage = "Failed to update the user due to a validation error.";
+
+                return new UsersDto { ErrorMessage = errorMessage };
+            }
         }
 
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<UsersDto> DeleteAsync(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new ApiBadRequestResponse(ModelState));
-            }
+            var user = _usersService.GetUsersByIdAsync(id);
 
-            var user = _usersService.GetUsersById(id);
-
-            var isUserDeleted = await _usersService.DeleteUsers(id);
+            var isUserDeleted = await _usersService.DeleteUsersAsync(id);
 
             if (isUserDeleted)
             {
-                var objUser = _mapper.Map<UsersDto>(user);
+                var userDto = _mapper.Map<UsersDto>(user);
 
-                return Ok(new ApiOkResponse(objUser));
+                return userDto;
             }
             else
             {
-                return BadRequest();
+                var errorMessage = "User with the specified ID can not delete.";
+                return new UsersDto { ErrorMessage = errorMessage };
             }
         }
 

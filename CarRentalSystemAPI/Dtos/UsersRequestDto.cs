@@ -4,9 +4,12 @@ namespace CarRentalSystemAPI.Dtos
 {
     public class UsersRequestDto : PagingModel<UsersDto>
     {
-        public string? Search { get; set; }
-        public string? Column { get; set; }
-        public string? SortOrder { get; set; }
-        public string? OrderBy { get; set; }
+        public string? columnName { get; set; }
+
+        public string? searchTerm { get; set; }
+
+        public string? sortBy { get; set; }
+
+        public bool isAscending { get; set; }
     }
 }

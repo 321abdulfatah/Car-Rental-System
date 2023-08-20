@@ -6,18 +6,18 @@ namespace BusinessAccessLayer.Services.Interfaces
 {
     public interface ICarService
     {
-        Task<bool> CreateCar(Car car);
+        Task<bool> CreateCarAsync(Car car);
 
-        Task<IEnumerable<Car>> GetAllCars();
+        Task<IEnumerable<Car>> GetAllCarsAsync();
 
-        Task<Car> GetCarById(Guid carId);
+        Task<Car> GetCarByIdAsync(Guid carId);
 
-        Task<bool> UpdateCar(Car car);
+        Task<bool> UpdateCarAsync(Car car);
 
-        Task<bool> CanDeleteCar(Guid carId);
+        Task<bool> CanDeleteCarAsync(Guid carId);
 
-        Task<bool> DeleteCar(Guid carId);
+        Task<bool> DeleteCarAsync(Guid carId);
         
-        Task<PaginatedResult<Car>> GetFilteredAndSortedCars(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
+        Task<PaginatedResult<Car>> GetListCarsAsync(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
     }
 }
