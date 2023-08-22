@@ -18,6 +18,6 @@ namespace BusinessAccessLayer.Services.Interfaces
 
         Task<bool> DeleteCarAsync(Guid carId);
         
-        Task<PaginatedResult<Car>> GetListCarsAsync(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
+        Task<PaginatedResult<Car>> GetListCarsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize);
     }
 }

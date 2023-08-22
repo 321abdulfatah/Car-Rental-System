@@ -2,7 +2,6 @@
 using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
-using Abp.Domain.Entities;
 using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Repositories
@@ -20,15 +19,8 @@ namespace BusinessAccessLayer.Repositories
 
         public async Task<T> CreateAsync(T entity)
         {
-
-            if (entity != null)
-            {
-                await _entities.AddAsync(entity);
-            }
-
-            else
-                throw new ArgumentNullException("entity");
-
+            await _entities.AddAsync(entity);
+            
             return entity;
         }
 
@@ -50,12 +42,7 @@ namespace BusinessAccessLayer.Repositories
         }
         public async Task<T> GetAsync(Guid id)
         {
-            var entity = await _entities.FindAsync(id);
-            if (entity == null)
-            {
-                throw new EntityNotFoundException($"Entity with ID {id} not found.");
-            }
-            return entity;
+            return await _entities.FindAsync(id);
         }
         public async Task<T> GetAsync(Guid id, IEnumerable<Expression<Func<T, object>>> includeExpressions)
         {
@@ -65,18 +52,14 @@ namespace BusinessAccessLayer.Repositories
             {
                 entity = entity.Include(includeExpression);
             }
-            if (entity == null)
-            {
-                throw new EntityNotFoundException($"Entity with ID {id} not found.");
-            }
-            return await entity.SingleOrDefaultAsync();
+
+            return await entity.FirstAsync();
         }
             public async Task UpdateAsync(T entity)
-        {
-            _CarRentalDBContext.Entry(entity).State = EntityState.Modified;
-
-            //_entities.Update(entity);
-        }
+            {
+             //_CarRentalDBContext.Entry(entity).State = EntityState.Modified;
+             _entities.Update(entity);
+            }
 
         public async Task DeleteAsync(Guid id)
         {

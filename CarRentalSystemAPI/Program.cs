@@ -75,12 +75,14 @@ builder.Services.AddDbContext<CarRentalDBContext>(options =>
 
 builder.Services.AddMemoryCache();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
+    // app.UseDeveloperExceptionPage();
+    app.UseExceptionHandler("/error-local-development");
     app.UseSwagger();
     app.UseSwaggerUI();
 }

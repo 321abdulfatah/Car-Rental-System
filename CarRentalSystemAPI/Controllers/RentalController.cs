@@ -161,7 +161,7 @@ namespace CarRentalSystemAPI.Controllers
 
             var rentalDto = _mapper.Map<RentalDto>(updateRentalDto);
 
-            var rentalRequest = _mapper.Map<Rental>(updateRentalDto);
+            var rentalRequest = _mapper.Map<Rental>(rentalDto);
 
             var isRentalUpdated = await _rentalService.UpdateRentalAsync(rentalRequest);
             if (isRentalUpdated)

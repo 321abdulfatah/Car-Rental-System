@@ -17,10 +17,5 @@ namespace CarRentalSystemAPI.Dtos
         public Guid? DriverId { get; set; }
         
         public DriverDto Driver { get; set; }
-
-        [SwaggerSchema(ReadOnly = true)]
-        public string? ErrorMessage { get; set; } = "";
-
-
     }
 }
