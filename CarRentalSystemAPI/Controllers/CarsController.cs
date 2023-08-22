@@ -51,16 +51,37 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<PaginatedResult<CarDto>> GetListCarsAsync([FromQuery] CarRequestDto carDto)
+        public async Task<CarListDto> GetListCarsAsync([FromQuery] CarRequestDto carDto)
         {
+            bool foundColumn = true;
+
             Expression<Func<Car, bool>> filter = car => true; // Initialize the filter to return all records
 
             if (!string.IsNullOrEmpty(carDto.columnName) && !string.IsNullOrEmpty(carDto.searchTerm))
             {
-                var propertyInfo = typeof(Car).GetProperty(carDto.columnName);
+                /*var propertyInfo = typeof(Car).GetProperty(carDto.columnName);
                 if (propertyInfo != null)
                 {
                     filter = car => propertyInfo.GetValue(car).ToString().Contains(carDto.searchTerm);
+                }*/
+                switch (carDto.columnName)
+                {
+                    case "Type":
+                        filter = car => car.Type.Contains(carDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Color":
+                        filter = car => car.Color.Contains(carDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "DailyFare":
+                        filter = car => car.DailyFare.ToString().Equals(carDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "EngineCapacity":
+                        filter = car => car.EngineCapacity.ToString().Equals(carDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    default:
+                        foundColumn = !foundColumn;
+                        filter = car => false;
+                        break;
                 }
             }
 
@@ -78,13 +99,14 @@ namespace CarRentalSystemAPI.Controllers
             );
            
             var carDtos = _mapper.Map<List<CarDto>>(pagedCars.Data);
-
-            var result = new PaginatedResult<CarDto>
+            
+            if (!foundColumn)
             {
-                Data = carDtos,
-                TotalCount = pagedCars.TotalCount
-            };
-            return result;
+                var errorMessage = $"Column Name with {carDto.columnName} was not found.";
+
+                return new CarListDto { Data = carDtos, TotalCount = pagedCars.TotalCount, ErrorMessage = errorMessage };
+            }
+            return new CarListDto { Data = carDtos, TotalCount = pagedCars.TotalCount };
         }
 
         // POST api/<CarsController>

@@ -37,9 +37,16 @@ namespace BusinessAccessLayer.Repositories
             return await _entities.ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, object>> includeExpression)
+        public async Task<IEnumerable<T>> GetAllAsync(IEnumerable<Expression<Func<T, object>>> includeExpressions)
         {
-            return await _entities.Include(includeExpression).ToListAsync();
+            var entity =  _entities.AsQueryable();
+            
+            foreach (var includeExpression in includeExpressions)
+            {
+                entity = entity.Include(includeExpression);
+            }
+
+            return await entity.ToListAsync();
         }
         public async Task<T> GetAsync(Guid id)
         {
@@ -50,14 +57,19 @@ namespace BusinessAccessLayer.Repositories
             }
             return entity;
         }
-        public async Task<T> GetAsync(Guid id, Expression<Func<T, object>> includeExpression)
+        public async Task<T> GetAsync(Guid id, IEnumerable<Expression<Func<T, object>>> includeExpressions)
         {
-            var entity = await _entities.Where(e => e.Id == id).Include(includeExpression).SingleOrDefaultAsync();
+            var entity = _entities.Where(e => e.Id == id);
+
+            foreach (var includeExpression in includeExpressions)
+            {
+                entity = entity.Include(includeExpression);
+            }
             if (entity == null)
             {
                 throw new EntityNotFoundException($"Entity with ID {id} not found.");
             }
-            return entity;
+            return await entity.SingleOrDefaultAsync();
         }
             public async Task UpdateAsync(T entity)
         {

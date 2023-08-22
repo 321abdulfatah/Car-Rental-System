@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class RentalController : ControllerBase
@@ -53,16 +53,37 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<PaginatedResult<RentalDto>> GetListCarsAsync([FromQuery] RentalRequestDto rentalDto)
+        public async Task<RentalListDto> GetListCarsAsync([FromQuery] RentalRequestDto rentalDto)
         {
+            bool foundColumn = true;
+
             Expression<Func<Rental, bool>> filter = rental => true; // Initialize the filter to return all records
 
             if (!string.IsNullOrEmpty(rentalDto.columnName) && !string.IsNullOrEmpty(rentalDto.searchTerm))
             {
-                var propertyInfo = typeof(Rental).GetProperty(rentalDto.columnName);
+                /*var propertyInfo = typeof(Rental).GetProperty(rentalDto.columnName);
                 if (propertyInfo != null)
                 {
                     filter = rental => propertyInfo.GetValue(rental).ToString().Contains(rentalDto.searchTerm);
+                }*/
+                switch (rentalDto.columnName)
+                {
+                    case "Rent":
+                        filter = rental => rental.Rent.ToString().Equals(rentalDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "RentTerm":
+                        filter = rental => rental.RentTerm.ToString().Equals(rentalDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "StartDateRent":
+                        filter = rental => rental.StartDateRent.ToString().Equals(rentalDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "StatusRent":
+                        filter = rental => rental.StatusRent.ToString().Equals(rentalDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    default:
+                        foundColumn = !foundColumn;
+                        filter = rental => false;
+                        break;
                 }
             }
 
@@ -76,12 +97,13 @@ namespace CarRentalSystemAPI.Controllers
 
             var rentalDtos = _mapper.Map<List<RentalDto>>(pagedRentals.Data);
 
-            var result = new PaginatedResult<RentalDto>
+            if (!foundColumn)
             {
-                Data = rentalDtos,
-                TotalCount = pagedRentals.TotalCount
-            };
-            return result;
+                var errorMessage = $"Column Name with {rentalDto.columnName} was not found.";
+
+                return new RentalListDto { Data = rentalDtos, TotalCount = pagedRentals.TotalCount, ErrorMessage = errorMessage };
+            }
+            return new RentalListDto { Data = rentalDtos, TotalCount = pagedRentals.TotalCount };
         }
 
         [HttpPost]

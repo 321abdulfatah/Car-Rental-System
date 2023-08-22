@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class DriverController : ControllerBase
@@ -53,16 +53,51 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<PaginatedResult<DriverDto>> GetListDriversAsync([FromQuery] DriverRequestDto driverDto)
+        public async Task<DriverListDto> GetListDriversAsync([FromQuery] DriverRequestDto driverDto)
         {
+            bool foundColumn = true;
+
             Expression<Func<Driver, bool>> filter = driver => true; // Initialize the filter to return all records
 
             if (!string.IsNullOrEmpty(driverDto.columnName) && !string.IsNullOrEmpty(driverDto.searchTerm))
             {
-                var propertyInfo = typeof(Driver).GetProperty(driverDto.columnName);
+                /*var propertyInfo = typeof(Driver).GetProperty(driverDto.columnName);
                 if (propertyInfo != null)
                 {
                     filter = driver => propertyInfo.GetValue(driver).ToString().Contains(driverDto.searchTerm);
+                }*/
+                switch (driverDto.columnName)
+                {
+                    case "Name":
+                        filter = driver => driver.Name.Contains(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Address":
+                        filter = driver => driver.Address.Contains(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Gender":
+                        filter = driver => driver.Gender.Equals(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Age":
+                        filter = driver => driver.Age.ToString().Equals(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Phone":
+                        filter = driver => driver.Phone.ToString().Equals(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Email":
+                        filter = driver => driver.Email.Equals(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Salary":
+                        filter = driver => driver.Salary.ToString().Equals(driverDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "IsAvailable":
+                        bool searchValue = false; // Convert the search term to a boolean value
+                        bool.TryParse(driverDto.searchTerm, out searchValue);
+                        filter = driver => driver.IsAvailable == searchValue; // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    default:
+                        foundColumn = !foundColumn;
+                        filter = driver => false;
+                        break;
                 }
             }
 
@@ -81,12 +116,13 @@ namespace CarRentalSystemAPI.Controllers
 
             var driverDtos = _mapper.Map<List<DriverDto>>(pagedDrivers.Data);
 
-            var result = new PaginatedResult<DriverDto>
+            if (!foundColumn)
             {
-                Data = driverDtos,
-                TotalCount = pagedDrivers.TotalCount
-            };
-            return result;
+                var errorMessage = $"Column Name with {driverDto.columnName} was not found.";
+
+                return new DriverListDto { Data = driverDtos, TotalCount = pagedDrivers.TotalCount, ErrorMessage = errorMessage };
+            }
+            return new DriverListDto { Data = driverDtos, TotalCount = pagedDrivers.TotalCount };
         }
 
         [HttpPost]

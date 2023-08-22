@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -49,16 +49,43 @@ namespace CarRentalSystemAPI.Controllers
 
         }
         [HttpGet]
-        public async Task<PaginatedResult<CustomerDto>> GetListCustomersAsync([FromQuery] CustomerRequestDto customerDto)
+        public async Task<CustomerListDto> GetListCustomersAsync([FromQuery] CustomerRequestDto customerDto)
         {
+            bool foundColumn = true;
+
             Expression<Func<Customer, bool>> filter = customer => true; // Initialize the filter to return all records
 
             if (!string.IsNullOrEmpty(customerDto.columnName) && !string.IsNullOrEmpty(customerDto.searchTerm))
             {
-                var propertyInfo = typeof(Customer).GetProperty(customerDto.columnName);
+                /*var propertyInfo = typeof(Customer).GetProperty(customerDto.columnName);
                 if (propertyInfo != null)
                 {
                     filter = customer => propertyInfo.GetValue(customer).ToString().Contains(customerDto.searchTerm);
+                }*/
+                switch (customerDto.columnName)
+                {
+                    case "Name":
+                        filter = customer => customer.Name.Contains(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Address":
+                        filter = customer => customer.Address.Contains(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Gender":
+                        filter = customer => customer.Gender.Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Age":
+                        filter = customer => customer.Age.ToString().Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Phone":
+                        filter = customer => customer.Phone.ToString().Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Email":
+                        filter = customer => customer.Email.Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    default:
+                        foundColumn = !foundColumn;
+                        filter = customer => false;
+                        break;
                 }
             }
 
@@ -76,13 +103,14 @@ namespace CarRentalSystemAPI.Controllers
             );
 
             var customerDtos = _mapper.Map<List<CustomerDto>>(pagedCustomers.Data);
-
-            var result = new PaginatedResult<CustomerDto>
+            if (!foundColumn)
             {
-                Data = customerDtos,
-                TotalCount = pagedCustomers.TotalCount
-            };
-            return result;
+                var errorMessage = $"Column Name with {customerDto.columnName} was not found.";
+
+                return new CustomerListDto { Data = customerDtos, TotalCount = pagedCustomers.TotalCount, ErrorMessage = errorMessage };
+            }
+            return new CustomerListDto { Data = customerDtos, TotalCount = pagedCustomers.TotalCount };
+
         }
         [HttpPost]
         public async Task<CustomerDto> CreateAsync([FromForm] CreateCustomerDto createCustomerDto)

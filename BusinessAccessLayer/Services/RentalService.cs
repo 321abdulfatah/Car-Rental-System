@@ -71,13 +71,27 @@ namespace BusinessAccessLayer.Services
 
         public async Task<IEnumerable<Rental>> GetAllRentalAsync()
         {
-            var rentalDetailsList = await _unitOfWork.Rentals.GetAllAsync();
+            var includeExpressions = new List<Expression<Func<Rental, object>>>
+            {
+                r => r.Car,
+                r => r.Customer,
+                r => r.Driver
+            };
+
+            var rentalDetailsList = await _unitOfWork.Rentals.GetAllAsync(includeExpressions);
             return rentalDetailsList;
         }
 
         public async Task<Rental> GetRentalByIdAsync(Guid rentalId)
         {
-            var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId);
+            var includeExpressions = new List<Expression<Func<Rental, object>>>
+            {
+                r => r.Car,
+                r => r.Customer,
+                r => r.Driver
+            };
+
+            var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId, includeExpressions);
             if (rentalDetails != null)
             {
                 return rentalDetails;

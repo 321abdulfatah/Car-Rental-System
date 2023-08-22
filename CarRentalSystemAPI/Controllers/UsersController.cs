@@ -10,7 +10,7 @@ using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -55,16 +55,31 @@ namespace CarRentalSystemAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<PaginatedResult<UsersDto>> GetListCarsAsync([FromQuery] UsersRequestDto userDto)
+        public async Task<UsersListDto> GetListCarsAsync([FromQuery] UsersRequestDto userDto)
         {
+            bool foundColumn = true;
+
             Expression<Func<Users, bool>> filter = user => true; // Initialize the filter to return all records
 
             if (!string.IsNullOrEmpty(userDto.columnName) && !string.IsNullOrEmpty(userDto.searchTerm))
             {
-                var propertyInfo = typeof(Users).GetProperty(userDto.columnName);
+                /*var propertyInfo = typeof(Users).GetProperty(userDto.columnName);
                 if (propertyInfo != null)
                 {
-                    filter = user => propertyInfo.GetValue(user).ToString().Contains(userDto.searchTerm);
+                    filter = user => propertyInfo.GetValue(user,null).ToString().Contains(userDto.searchTerm);
+                }*/
+                switch (userDto.columnName)
+                {
+                    case "Name":
+                        filter = user => user.Name.Contains(userDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    case "Password":
+                        filter = user => user.Password.Contains(userDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
+                        break;
+                    default:
+                        foundColumn = !foundColumn;
+                        filter = user => false;
+                        break;
                 }
             }
 
@@ -83,12 +98,13 @@ namespace CarRentalSystemAPI.Controllers
 
             var userDtos = _mapper.Map<List<UsersDto>>(pagedUsers.Data);
 
-            var result = new PaginatedResult<UsersDto>
+            if (!foundColumn)
             {
-                Data = userDtos,
-                TotalCount = pagedUsers.TotalCount
-            };
-            return result;
+                var errorMessage = $"Column Name with {userDto.columnName} was not found.";
+
+                return new UsersListDto { Data = userDtos, TotalCount = pagedUsers.TotalCount, ErrorMessage = errorMessage};
+            }
+            return new UsersListDto { Data = userDtos, TotalCount = pagedUsers.TotalCount };
         }
 
         [HttpPost]

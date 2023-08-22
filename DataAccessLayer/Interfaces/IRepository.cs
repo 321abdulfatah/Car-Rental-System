@@ -9,8 +9,8 @@ namespace DataAccessLayer.Interfaces
         Task DeleteAsync(Guid Id);
         Task UpdateAsync(T entity);
         Task<IEnumerable<T>> GetAllAsync();
-        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, object>> includeExpression);
+        Task<IEnumerable<T>> GetAllAsync(IEnumerable<Expression<Func<T, object>>> includeExpressions);
         Task<T> GetAsync(Guid Id);
-        Task<T> GetAsync(Guid Id, Expression<Func<T, object>> includeExpression);
+        Task<T> GetAsync(Guid Id, IEnumerable<Expression<Func<T, object>>> includeExpressions);
     }
 }
