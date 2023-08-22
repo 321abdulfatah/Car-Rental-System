@@ -65,13 +65,13 @@ namespace BusinessAccessLayer.Services
         public async Task<IEnumerable<Car>> GetAllCarsAsync()
         {
 
-            var carDetailsList = await _unitOfWork.Cars.GetAllAsync();
+            var carDetailsList = await _unitOfWork.Cars.GetAllAsync(c => c.Driver);
             return carDetailsList;
         }
 
         public async Task<Car> GetCarByIdAsync(Guid carId)
         {
-            var carDetails = await _unitOfWork.Cars.GetAsync(carId);
+            var carDetails = await _unitOfWork.Cars.GetAsync(carId, c => c.Driver);
             if (carDetails != null)
             {
                 return carDetails;

@@ -24,7 +24,7 @@ namespace CarRentalSystemAPI.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<List<DriverDto>> GetAllDriversAsync()
         {
             var driverDetailsList = await _driverService.GetAllDriverAsync();

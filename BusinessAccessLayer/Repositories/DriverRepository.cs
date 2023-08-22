@@ -14,6 +14,11 @@ namespace BusinessAccessLayer.Repositories
         {
             _dbContext = dbContext;
         }
+        public async Task<bool> IsDriverAvailableAsync(Guid driverId)
+        {
+            var driver = await _dbContext.Drivers.FindAsync(driverId);
+            return driver != null && driver.IsAvailable;
+        }
         public async Task<PaginatedResult<Driver>> GetListAsync(Expression<Func<Driver, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
         {
             var query = _dbContext.Drivers.Where(filter);

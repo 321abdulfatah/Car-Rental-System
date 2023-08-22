@@ -1,4 +1,5 @@
 ﻿using DataAccessLayer.Models;
+using System.Linq.Expressions;
 
 namespace DataAccessLayer.Interfaces
 {
@@ -8,6 +9,8 @@ namespace DataAccessLayer.Interfaces
         Task DeleteAsync(Guid Id);
         Task UpdateAsync(T entity);
         Task<IEnumerable<T>> GetAllAsync();
+        Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, object>> includeExpression);
         Task<T> GetAsync(Guid Id);
+        Task<T> GetAsync(Guid Id, Expression<Func<T, object>> includeExpression);
     }
 }

@@ -28,7 +28,7 @@ namespace CarRentalSystemAPI.Controllers
             _mapper = mapper;
 		}
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<List<UsersDto>> GetAllUsersAsync()
         {
             var usersDetailsList = await _usersService.GetAllUsersAsync();
@@ -180,6 +180,7 @@ namespace CarRentalSystemAPI.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost]
 		[Route("authenticate")]
 		public IActionResult Authenticate([FromForm] UsersDto userDto)

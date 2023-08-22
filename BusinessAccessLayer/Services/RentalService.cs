@@ -14,10 +14,33 @@ namespace BusinessAccessLayer.Services
         {
             _unitOfWork = unitOfWork;
         }
+        public async Task<bool> IsDriverAvailableAsync(Guid driverId)
+        {
+            bool isAvailable = await _unitOfWork.Drivers.IsDriverAvailableAsync(driverId);
+            return isAvailable;
+        }
         public async Task<bool> CreateRentalAsync(Rental rental)
         {
             if (rental != null)
             {
+                if (rental.DriverId != null)
+                {
+                    var driverId = rental.DriverId;
+
+                    bool isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
+                    
+                    while(!isDriverAvailable && driverId != null)
+                    {
+                        var driver = await _unitOfWork.Drivers.GetAsync((Guid)driverId);
+
+                        driverId = driver.DriverId;
+
+                        isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
+                    }
+
+                    rental.DriverId = isDriverAvailable ? driverId : null;
+                }
+
                 await _unitOfWork.Rentals.CreateAsync(rental);
 
                 var result = _unitOfWork.Save();

@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 
 namespace CarRentalSystemAPI.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CarsController : ControllerBase
@@ -24,8 +24,8 @@ namespace CarRentalSystemAPI.Controllers
             _carService = carService;
         }
 
-        [HttpGet]
-        public async Task<List<CarDto>> GetAllCarsAsync()//localhost..../api/cars/getcars
+        [HttpGet("getAll")]
+        public async Task<List<CarDto>> GetAllCarsAsync()//localhost..../api/cars/getAll
         {
             var carDetailsList = await _carService.GetAllCarsAsync();
            

@@ -6,6 +6,8 @@ namespace BusinessAccessLayer.Services.Interfaces
 {
     public interface IRentalService
     {
+        Task<bool> IsDriverAvailableAsync(Guid driverId);
+
         Task<bool> CreateRentalAsync(Rental rental);
 
         Task<IEnumerable<Rental>> GetAllRentalAsync();

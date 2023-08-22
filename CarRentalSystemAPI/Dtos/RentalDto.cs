@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer.Models;
 using DataAccessLayer.Enums;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace CarRentalSystemAPI.Dtos
 {
@@ -26,7 +27,9 @@ namespace CarRentalSystemAPI.Dtos
         public DateTime StartDateRent { get; set; }
 
         public int RentTerm { get; set; }
-        public string ErrorMessage { get; set; } = "";
+
+        [SwaggerSchema(ReadOnly = true)]
+        public string? ErrorMessage { get; set; } = "";
 
     }
 }

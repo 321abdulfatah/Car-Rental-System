@@ -23,7 +23,7 @@ namespace CarRentalSystemAPI.Controllers
             _customerService = customerService;
         }
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<List<CustomerDto>> GetAllCustomersAsync()
         {
             var customerDetailsList = await _customerService.GetAllCustomersAsync();

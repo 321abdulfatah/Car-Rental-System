@@ -20,7 +20,7 @@ namespace BusinessAccessLayer.Repositories
 
         public async Task<PaginatedResult<Car>> GetListAsync(Expression<Func<Car, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
         {
-            var query = _dbContext.Cars.Where(filter);
+            var query = _dbContext.Cars.Include(c => c.Driver).Where(filter);
 
             switch (sortBy)
             {

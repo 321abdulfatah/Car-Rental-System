@@ -18,11 +18,7 @@ namespace BusinessAccessLayer.Data.Config
             builder.Property(b => b.Color).IsRequired();
             
             builder.Property(b => b.DailyFare).IsRequired();
-
-            // builder.HasOne<Driver>(d => d.Driver)
-            //.WithOne(c => c.Car)
-            //.HasForeignKey<Driver>(c => c.Id).OnDelete(DeleteBehavior.Cascade);
-
+          
         }
     }
 }

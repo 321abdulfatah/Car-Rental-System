@@ -14,8 +14,12 @@ namespace CarRentalSystemAPI.Profiles
 
             CreateMap<UpdateCarDto, Car>();
 
-            // get , delete
-            CreateMap<CarDto, Car>().ReverseMap();
+            
+            CreateMap<CarDto, Car>();
+
+            CreateMap<Car, CarDto>()
+                .ForMember(dest => dest.Driver,
+                opt => opt.MapFrom(src => src.Driver));
 
             CreateMap<CreateCarDto, CarDto>();
 

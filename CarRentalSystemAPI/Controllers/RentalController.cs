@@ -25,7 +25,7 @@ namespace CarRentalSystemAPI.Controllers
             _rentalService = rentalService;
         }
 
-        [HttpGet]
+        [HttpGet("getAll")]
         public async Task<List<RentalDto>> GetAllRentalsAsync()
         {
             var rentalDetailsList = await _rentalService.GetAllRentalAsync();
