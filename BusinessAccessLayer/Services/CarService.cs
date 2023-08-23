@@ -69,8 +69,9 @@ namespace BusinessAccessLayer.Services
             {
                 c => c.Driver,
             };
+            Expression<Func<Car, bool>> filter = car => true;
 
-            var carDetailsList = await _unitOfWork.Cars.GetAllAsync(includeExpressions);
+            var carDetailsList = await _unitOfWork.Cars.GetAllAsync(filter, includeExpressions);
             return carDetailsList;
         }
 
@@ -115,13 +116,14 @@ namespace BusinessAccessLayer.Services
             {
                 c => c.Driver,
             };
-
-            var cars = await _unitOfWork.Cars.GetAllAsync(includeExpressions);
-
+            Expression<Func<Car, bool>> filter = car => true;
+            
             if (!string.IsNullOrEmpty(searchTerm))
-                cars = cars.Where(car => car.Color.Contains(searchTerm) || car.Type.Contains(searchTerm) ||
-                                         car.EngineCapacity.ToString().Equals(searchTerm) || 
-                                         car.DailyFare.ToString().Equals(searchTerm)).ToList();
+                filter = car => car.Color.Contains(searchTerm) || car.Type.Contains(searchTerm) ||
+                                         car.EngineCapacity.ToString().Equals(searchTerm) ||
+                                         car.DailyFare.ToString().Equals(searchTerm);
+
+            var cars = await _unitOfWork.Cars.GetAllAsync(filter,includeExpressions);
 
             var totalCount = cars.Count();
 

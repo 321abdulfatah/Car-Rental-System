@@ -29,7 +29,7 @@ namespace BusinessAccessLayer.Repositories
             return await _entities.ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(IEnumerable<Expression<Func<T, object>>> includeExpressions)
+        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> filter, IEnumerable<Expression<Func<T, object>>> includeExpressions)
         {
             var entity =  _entities.AsQueryable();
             
@@ -38,7 +38,7 @@ namespace BusinessAccessLayer.Repositories
                 entity = entity.Include(includeExpression);
             }
 
-            return await entity.ToListAsync();
+            return await entity.Where(filter).ToListAsync();
         }
         public async Task<T> GetAsync(Guid id)
         {
