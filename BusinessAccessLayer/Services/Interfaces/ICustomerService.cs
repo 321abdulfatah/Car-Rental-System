@@ -8,14 +8,13 @@ namespace BusinessAccessLayer.Services.Interfaces
     {
         Task<bool> CreateCustomerAsync(Customer customer);
 
-        Task<IEnumerable<Customer>> GetAllCustomersAsync();
-
         Task<Customer> GetCustomerByIdAsync(Guid customerId);
-
+        
         Task<bool> UpdateCustomerAsync(Customer customer);
-
+        
         Task<bool> DeleteCustomerAsync(Guid customerId);
-        Task<PaginatedResult<Customer>> GetListCustomersAsync(Expression<Func<Customer, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
+
+        Task<PaginatedResult<Customer>> GetListCustomersAsync(string searchTerm, string sortBy, int pageIndex, int pageSize);
 
     }
 }

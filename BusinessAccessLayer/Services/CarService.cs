@@ -4,6 +4,7 @@ using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessAccessLayer.Services
 {
@@ -63,18 +64,6 @@ namespace BusinessAccessLayer.Services
             return false;
         }
 
-        public async Task<IEnumerable<Car>> GetAllCarsAsync()
-        {
-            var includeExpressions = new List<Expression<Func<Car, object>>>
-            {
-                c => c.Driver,
-            };
-            Expression<Func<Car, bool>> filter = car => true;
-
-            var carDetailsList = await _unitOfWork.Cars.GetAllAsync(filter, includeExpressions);
-            return carDetailsList;
-        }
-
         public async Task<Car> GetCarByIdAsync(Guid carId)
         {
             var includeExpressions = new List<Expression<Func<Car, object>>>
@@ -85,10 +74,11 @@ namespace BusinessAccessLayer.Services
 
             if (carDetails == null)
             {
+                //throw new Exceptions.EntityNotFoundException($"Couldn't find the Car with Id {carId} in the Database.");
+
                 throw new EntityNotFoundException($"Car with ID {carId} not found.");
             }
             return carDetails;
-            
         }
 
         public async Task<bool> UpdateCarAsync(Car car)
@@ -123,9 +113,13 @@ namespace BusinessAccessLayer.Services
                                          car.EngineCapacity.ToString().Equals(searchTerm) ||
                                          car.DailyFare.ToString().Equals(searchTerm);
 
-            var cars = await _unitOfWork.Cars.GetAllAsync(filter,includeExpressions);
+            var query = _unitOfWork.Cars.GetAll(includeExpressions);
 
-            var totalCount = cars.Count();
+            // Apply filter
+            query = query.Where(filter);
+
+            // Calculate total count
+            var totalCount = await query.CountAsync();
 
             if (!string.IsNullOrEmpty(sortBy))
             {
@@ -140,24 +134,24 @@ namespace BusinessAccessLayer.Services
                 switch (columnName.ToLower())
                 {
                     case "color":
-                        cars = isDescending ? cars.OrderByDescending(c => c.Color) : cars.OrderBy(c => c.Color);
+                        query = isDescending ? query.OrderByDescending(c => c.Color) : query.OrderBy(c => c.Color);
                         break;
                     case "dailyfare":
-                        cars = isDescending ? cars.OrderByDescending(c => c.DailyFare) : cars.OrderBy(c => c.DailyFare);
+                        query = isDescending ? query.OrderByDescending(c => c.DailyFare) : query.OrderBy(c => c.DailyFare);
                         break;
                     case "enginecapacity":
-                        cars = isDescending ? cars.OrderByDescending(c => c.EngineCapacity) : cars.OrderBy(c => c.EngineCapacity);
+                        query = isDescending ? query.OrderByDescending(c => c.EngineCapacity) : query.OrderBy(c => c.EngineCapacity);
                         break;
                     case "type":
-                        cars = isDescending ? cars.OrderByDescending(c => c.Type) : cars.OrderBy(c => c.Type);
+                        query = isDescending ? query.OrderByDescending(c => c.Type) : query.OrderBy(c => c.Type);
                         break;
                     default:
-                        cars = cars.OrderBy(c => c.Id);
+                        query = query.OrderBy(c => c.Id);
                         break;
                 }
             }
 
-            var pagedCars = cars.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+            var pagedCars = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return new PaginatedResult<Car>
             {

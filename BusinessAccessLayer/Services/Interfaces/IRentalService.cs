@@ -10,14 +10,13 @@ namespace BusinessAccessLayer.Services.Interfaces
 
         Task<bool> CreateRentalAsync(Rental rental);
 
-        Task<IEnumerable<Rental>> GetAllRentalAsync();
-
         Task<Rental> GetRentalByIdAsync(Guid rentalId);
 
         Task<bool> UpdateRentalAsync(Rental rental);
 
         Task<bool> DeleteRentalAsync(Guid rentalId);
-        Task<PaginatedResult<Rental>> GetListRentalsAsync(Expression<Func<Rental, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
+        
+        Task<PaginatedResult<Rental>> GetListRentalsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize);
 
     }
 }

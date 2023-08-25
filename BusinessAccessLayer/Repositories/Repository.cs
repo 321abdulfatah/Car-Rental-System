@@ -24,22 +24,25 @@ namespace BusinessAccessLayer.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public IQueryable<T> GetAll()
         {
-            return await _entities.ToListAsync();
+            var query = _entities.AsQueryable();
+
+            return query;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> filter, IEnumerable<Expression<Func<T, object>>> includeExpressions)
+        public IQueryable<T> GetAll(IEnumerable<Expression<Func<T, object>>> includeExpressions)
         {
-            var entity =  _entities.AsQueryable();
+            var query =  _entities.AsQueryable();
             
             foreach (var includeExpression in includeExpressions)
             {
-                entity = entity.Include(includeExpression);
+                query = query.Include(includeExpression);
             }
 
-            return await entity.Where(filter).ToListAsync();
+            return query;
         }
+
         public async Task<T> GetAsync(Guid id)
         {
             return await _entities.FindAsync(id);
@@ -53,7 +56,7 @@ namespace BusinessAccessLayer.Repositories
                 entity = entity.Include(includeExpression);
             }
 
-            return await entity.FirstAsync();
+            return await entity.FirstOrDefaultAsync();
         }
             public async Task UpdateAsync(T entity)
             {

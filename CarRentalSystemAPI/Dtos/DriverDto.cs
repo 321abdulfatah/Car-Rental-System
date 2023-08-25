@@ -1,6 +1,4 @@
-﻿using Swashbuckle.AspNetCore.Annotations;
-
-namespace CarRentalSystemAPI.Dtos
+﻿namespace CarRentalSystemAPI.Dtos
 {
     public class DriverDto
     {
@@ -22,8 +20,6 @@ namespace CarRentalSystemAPI.Dtos
         
         public bool IsAvailable { get; set; }
         
-        [SwaggerSchema(ReadOnly = true)]
-        public string? ErrorMessage { get; set; } = "";
 
 
     }

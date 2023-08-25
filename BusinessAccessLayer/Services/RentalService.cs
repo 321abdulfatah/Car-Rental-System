@@ -1,7 +1,9 @@
-﻿using BusinessAccessLayer.Services.Interfaces;
+﻿using Abp.Domain.Entities;
+using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace BusinessAccessLayer.Services
@@ -23,6 +25,11 @@ namespace BusinessAccessLayer.Services
         {
             if (rental != null)
             {
+                if (rental.StartDateRent <= DateTime.Now)
+                {
+                    throw new Exception("The car cannot be rented with a previous date, " +
+                                        $"the date must be after the current date and time {DateTime.Now}");
+                }
                 if (rental.DriverId != null)
                 {
                     var driverId = rental.DriverId;
@@ -38,7 +45,9 @@ namespace BusinessAccessLayer.Services
                         isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
                     }
 
-                    rental.DriverId = isDriverAvailable ? driverId : null;
+                    rental.DriverId = isDriverAvailable ? driverId : 
+                        throw new Exception("The current driver for this car is currently unavailable " +
+                                            "and there is no other driver to replace him");
                 }
 
                 await _unitOfWork.Rentals.CreateAsync(rental);
@@ -58,7 +67,7 @@ namespace BusinessAccessLayer.Services
             var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId);
             if (rentalDetails != null)
             {
-                _unitOfWork.Rentals.DeleteAsync(rentalId);
+                await _unitOfWork.Rentals.DeleteAsync(rentalId);
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
@@ -67,19 +76,6 @@ namespace BusinessAccessLayer.Services
                     return false;
             }
             return false;
-        }
-
-        public async Task<IEnumerable<Rental>> GetAllRentalAsync()
-        {
-            var includeExpressions = new List<Expression<Func<Rental, object>>>
-            {
-                r => r.Car,
-                r => r.Customer,
-                r => r.Driver
-            };
-
-            var rentalDetailsList = await _unitOfWork.Rentals.GetAllAsync(includeExpressions);
-            return rentalDetailsList;
         }
 
         public async Task<Rental> GetRentalByIdAsync(Guid rentalId)
@@ -92,35 +88,88 @@ namespace BusinessAccessLayer.Services
             };
 
             var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId, includeExpressions);
-            if (rentalDetails != null)
+            if (rentalDetails == null)
             {
-                return rentalDetails;
+                throw new EntityNotFoundException($"Rental with ID {rentalId} not found.");
+                
             }
-            return null;
+            return rentalDetails;
         }
 
         public async Task<bool> UpdateRentalAsync(Rental rental)
         {
             if (rental != null)
             {
-                var rentalItem = await _unitOfWork.Rentals.GetAsync(rental.Id);
-                if (rentalItem != null)
-                {
-                    _unitOfWork.Rentals.UpdateAsync(rentalItem);
+                await _unitOfWork.Rentals.UpdateAsync(rental);
 
-                    var result = _unitOfWork.Save();
+                var result = _unitOfWork.Save();
 
-                    if (result > 0)
-                        return true;
-                    else
-                        return false;
-                }
+                if (result > 0)
+                    return true;
+                else
+                    return false;
+                
             }
             return false;
         }
-        public async Task<PaginatedResult<Rental>> GetListRentalsAsync(Expression<Func<Rental, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize)
+        public async Task<PaginatedResult<Rental>> GetListRentalsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {
-            return await _unitOfWork.Rentals.GetListAsync(filter, sortBy, isAscending, pageIndex, pageSize);
+            var includeExpressions = new List<Expression<Func<Rental, object>>>
+            {
+                r => r.Car,
+                r => r.Customer,
+                r => r.Driver
+            };
+            Expression<Func<Rental, bool>> filter = rental => true;
+
+            if (!string.IsNullOrEmpty(searchTerm))
+                filter = rental => rental.Rent.ToString().Equals(searchTerm) || 
+                                   rental.RentTerm.ToString().Equals(searchTerm) ||
+                                   rental.StatusRent.ToString().Equals(searchTerm) ||
+                                   rental.StartDateRent.ToString().Contains(searchTerm);
+
+            var query = _unitOfWork.Rentals.GetAll(includeExpressions);
+
+            // Apply filter
+            query = query.Where(filter);
+
+            // Calculate total count
+            var totalCount = await query.CountAsync();
+
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                // Split the sortBy string into column name and sorting direction
+                var sortByParts = sortBy.Split(' ');
+                string columnName = sortByParts[0];
+                string sortingDirection = sortByParts.Length > 1 ? sortByParts[1] : "asc"; // Default to ascending
+
+                // Determine the sorting order
+                bool isDescending = sortingDirection.Equals("desc", StringComparison.OrdinalIgnoreCase);
+
+                switch (columnName.ToLower())
+                {
+                    case "rent":
+                        query = isDescending ? query.OrderByDescending(c => c.Rent) : query.OrderBy(c => c.Rent);
+                        break;
+                    case "rentterm":
+                        query = isDescending ? query.OrderByDescending(c => c.RentTerm) : query.OrderBy(c => c.RentTerm);
+                        break;
+                    case "startdaterent":
+                        query = isDescending ? query.OrderByDescending(c => c.StartDateRent) : query.OrderBy(c => c.StartDateRent);
+                        break;
+                    default:
+                        query = query.OrderBy(c => c.Id);
+                        break;
+                }
+            }
+
+            var pagedRentals = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PaginatedResult<Rental>
+            {
+                Data = pagedRentals,
+                TotalCount = totalCount
+            };
         }
     }
 }

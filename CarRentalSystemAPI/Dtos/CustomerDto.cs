@@ -1,6 +1,4 @@
-﻿using Swashbuckle.AspNetCore.Annotations;
-
-namespace CarRentalSystemAPI.Dtos
+﻿namespace CarRentalSystemAPI.Dtos
 {
     public class CustomerDto
     {
@@ -17,9 +15,6 @@ namespace CarRentalSystemAPI.Dtos
         public string Phone { get; set; }
         
         public string Address { get; set; }
-
-        [SwaggerSchema(ReadOnly = true)]
-        public string? ErrorMessage { get; set; } = "";
 
     }
 }

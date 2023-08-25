@@ -25,22 +25,12 @@ namespace CarRentalSystemAPI.Controllers
             _carService = carService;
         }
 
-        [HttpGet("getAll")]
-        public async Task<List<CarDto>> GetAllCarsAsync()//localhost..../api/cars/getAll
-        {
-            var carDetailsList = await _carService.GetAllCarsAsync();
-           
-            var carDtos = _mapper.Map<List<CarDto>>(carDetailsList);
-
-            return carDtos;
-        }
-
         // GET: api/<CarsController>
         [HttpGet("{id}")]
         public async Task<CarDto> GetAsync(Guid id)
         {
             var car = await _carService.GetCarByIdAsync(id);
-
+ 
             var carDto = _mapper.Map<CarDto>(car);
 
             return carDto;

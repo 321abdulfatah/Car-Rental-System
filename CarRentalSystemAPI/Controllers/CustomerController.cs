@@ -23,26 +23,11 @@ namespace CarRentalSystemAPI.Controllers
             _customerService = customerService;
         }
 
-        [HttpGet("getAll")]
-        public async Task<List<CustomerDto>> GetAllCustomersAsync()
-        {
-            var customerDetailsList = await _customerService.GetAllCustomersAsync();
-            
-            var customerDtos = _mapper.Map<List<CustomerDto>>(customerDetailsList);
-
-            return customerDtos;
-        }
-
         [HttpGet("{id}")]
         public async Task<CustomerDto> GetAsync(Guid id)
         {
             var customer = await _customerService.GetCustomerByIdAsync(id);
 
-            if (customer == null)
-            {
-                var errorMessage = "Customer with the specified ID was not found.";
-                return new CustomerDto { ErrorMessage = errorMessage };
-            }
             var customerDto = _mapper.Map<CustomerDto>(customer);
 
             return customerDto;
@@ -51,132 +36,49 @@ namespace CarRentalSystemAPI.Controllers
         [HttpGet]
         public async Task<CustomerListDto> GetListCustomersAsync([FromQuery] CustomerRequestDto customerDto)
         {
-            bool foundColumn = true;
-
-            Expression<Func<Customer, bool>> filter = customer => true; // Initialize the filter to return all records
-
-            if (!string.IsNullOrEmpty(customerDto.columnName) && !string.IsNullOrEmpty(customerDto.searchTerm))
-            {
-                /*var propertyInfo = typeof(Customer).GetProperty(customerDto.columnName);
-                if (propertyInfo != null)
-                {
-                    filter = customer => propertyInfo.GetValue(customer).ToString().Contains(customerDto.searchTerm);
-                }*/
-                switch (customerDto.columnName)
-                {
-                    case "Name":
-                        filter = customer => customer.Name.Contains(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-                        break;
-                    case "Address":
-                        filter = customer => customer.Address.Contains(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-                        break;
-                    case "Gender":
-                        filter = customer => customer.Gender.Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-                        break;
-                    case "Age":
-                        filter = customer => customer.Age.ToString().Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-                        break;
-                    case "Phone":
-                        filter = customer => customer.Phone.ToString().Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-                        break;
-                    case "Email":
-                        filter = customer => customer.Email.Equals(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-                        break;
-                    default:
-                        foundColumn = !foundColumn;
-                        filter = customer => false;
-                        break;
-                }
-            }
-
-            else if (!string.IsNullOrWhiteSpace(customerDto.searchTerm))
-            {
-                filter = customer => customer.Name.Contains(customerDto.searchTerm); // Apply the search filter if searchTerm is not null or empty
-            }
-
-            var pagedCustomers = await _customerService.GetListCustomersAsync(
-                filter,
-                customerDto.sortBy,
-                customerDto.isAscending,
+            var pagedCustomeras = await _customerService.GetListCustomersAsync(
+                customerDto.SearchTerm,
+                customerDto.SortBy,
                 customerDto.PageIndex,
                 customerDto.PageSize
             );
 
-            var customerDtos = _mapper.Map<List<CustomerDto>>(pagedCustomers.Data);
-            if (!foundColumn)
-            {
-                var errorMessage = $"Column Name with {customerDto.columnName} was not found.";
+            var customerDtos = _mapper.Map<List<CustomerDto>>(pagedCustomeras.Data);
 
-                return new CustomerListDto { Data = customerDtos, TotalCount = pagedCustomers.TotalCount, ErrorMessage = errorMessage };
-            }
-            return new CustomerListDto { Data = customerDtos, TotalCount = pagedCustomers.TotalCount };
-
+            return new CustomerListDto { Data = customerDtos, TotalCount = pagedCustomeras.TotalCount };
         }
         [HttpPost]
-        public async Task<CustomerDto> CreateAsync([FromForm] CreateCustomerDto createCustomerDto)
+        public async Task<CreateCustomerDto> CreateAsync([FromForm] CreateCustomerDto createCustomerDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
-
-                errorMessage = (errorMessage == null) ? "Failed to create the customer due to a validation error." : errorMessage;
-
-                return new CustomerDto { ErrorMessage = errorMessage };
-            }
-
-            var customerDto = _mapper.Map<CustomerDto>(createCustomerDto);
-
-            var customerRequest = _mapper.Map<Customer>(customerDto);
+            var customerRequest = _mapper.Map<Customer>(createCustomerDto);
 
             var isCustomerCreated = await _customerService.CreateCustomerAsync(customerRequest);
 
             if (isCustomerCreated)
             {
-                return customerDto;
+                return createCustomerDto;
             }
             else
             {
-                var errorMessage = "Failed to create the customer due to a validation error.";
-
-                return new CustomerDto { ErrorMessage = errorMessage };
+                var errorMessage = "Failed to create the cutomer due to a validation error.";
+                throw new InvalidOperationException(errorMessage);
             }
         }
 
         [HttpPut("{id}")]
-        public async Task<CustomerDto> UpdateAsync(Guid id, [FromForm] UpdateCustomerDto updateCustomerDto)
+        public async Task<UpdateCustomerDto> UpdateAsync(Guid id, [FromForm] UpdateCustomerDto updateCustomerDto)
         {
-            if (!ModelState.IsValid)
-            {
-                var errorMessage = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)).ToString();
-
-                errorMessage = (errorMessage == null) ? "Failed to update the customer due to a validation error." : errorMessage;
-
-                return new CustomerDto { ErrorMessage = errorMessage };
-            }
-            
-            var existingCustomer = await _customerService.GetCustomerByIdAsync(id);
-
-            if (existingCustomer == null)
-            {
-                var errorMessage = "Customer with the specified ID was not found.";
-
-                return new CustomerDto { ErrorMessage = errorMessage };
-            }
-
-            var customerDto = _mapper.Map<CustomerDto>(updateCustomerDto);
-
             var customerRequest = _mapper.Map<Customer>(updateCustomerDto);
 
             var isCustomerUpdated = await _customerService.UpdateCustomerAsync(customerRequest);
             if (isCustomerUpdated)
             {
-                return customerDto;
+                return updateCustomerDto;
             }
             else
             {
                 var errorMessage = "Failed to update the customer due to a validation error.";
-
-                return new CustomerDto { ErrorMessage = errorMessage };
+                throw new InvalidOperationException(errorMessage);
             }
         }
 
@@ -196,7 +98,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Customer with the specified ID can not delete.";
-                return new CustomerDto { ErrorMessage = errorMessage };
+                throw new InvalidOperationException(errorMessage);
             }
         }
     }

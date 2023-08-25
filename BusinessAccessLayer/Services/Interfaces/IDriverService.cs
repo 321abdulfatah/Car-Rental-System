@@ -8,14 +8,13 @@ namespace BusinessAccessLayer.Services.Interfaces
     {
         Task<bool> CreateDriverAsync(Driver driver);
 
-        Task<IEnumerable<Driver>> GetAllDriverAsync();
-
         Task<Driver> GetDriverByIdAsync(Guid driverId);
 
         Task<bool> UpdateDriverAsync(Driver driver);
 
         Task<bool> DeleteDriverAsync(Guid driverId);
-        Task<PaginatedResult<Driver>> GetListDriversAsync(Expression<Func<Driver, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
+        
+        Task<PaginatedResult<Driver>> GetListDriversAsync(string searchTerm, string sortBy, int pageIndex, int pageSize);
 
     }
 }

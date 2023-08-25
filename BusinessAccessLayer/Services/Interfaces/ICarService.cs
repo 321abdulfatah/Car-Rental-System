@@ -8,8 +8,6 @@ namespace BusinessAccessLayer.Services.Interfaces
     {
         Task<bool> CreateCarAsync(Car car);
 
-        Task<IEnumerable<Car>> GetAllCarsAsync();
-
         Task<Car> GetCarByIdAsync(Guid carId);
 
         Task<bool> UpdateCarAsync(Car car);

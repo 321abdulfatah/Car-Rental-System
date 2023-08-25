@@ -81,8 +81,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // app.UseDeveloperExceptionPage();
-    app.UseExceptionHandler("/error-local-development");
+    app.UseDeveloperExceptionPage();
+    //app.UseExceptionHandler("/error-local-development");
     app.UseSwagger();
     app.UseSwaggerUI();
 }
