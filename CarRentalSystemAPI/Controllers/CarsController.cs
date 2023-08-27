@@ -4,9 +4,7 @@ using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
-using DataAccessLayer.Common.Models;
-using System.Linq.Expressions;
-using Abp.Domain.Entities;
+
 
 namespace CarRentalSystemAPI.Controllers
 {
@@ -17,7 +15,7 @@ namespace CarRentalSystemAPI.Controllers
     {
         private readonly IMapper _mapper;
 
-        public readonly ICarService _carService;
+        private readonly ICarService _carService;
 
         public CarsController(ICarService carService, IMapper mapper)
         {

@@ -5,16 +5,20 @@ using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BusinessAccessLayer.Services
-{
+    {
     public class CarService : ICarService
     {
-        public IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CarService(IUnitOfWork unitOfWork)
+        private readonly IMemoryCache _memoryCache;
+
+        public CarService(IUnitOfWork unitOfWork, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
+            _memoryCache = memoryCache;
         }
 
         public async Task<bool> CreateCarAsync(Car car)
@@ -102,10 +106,17 @@ namespace BusinessAccessLayer.Services
         public async Task<PaginatedResult<Car>> GetListCarsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {
 
+            var cacheKey = $"{searchTerm}_{sortBy}_{pageIndex}_{pageSize}";
+            if (_memoryCache.TryGetValue(cacheKey, out PaginatedResult<Car> cachedResult))
+            {
+                return cachedResult;
+            }
+
             var includeExpressions = new List<Expression<Func<Car, object>>>
             {
                 c => c.Driver,
             };
+
             Expression<Func<Car, bool>> filter = car => true;
             
             if (!string.IsNullOrEmpty(searchTerm))
@@ -153,11 +164,20 @@ namespace BusinessAccessLayer.Services
 
             var pagedCars = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return new PaginatedResult<Car>
+            var result = new PaginatedResult<Car>
             {
                 Data = pagedCars,
                 TotalCount = totalCount
             };
+
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromSeconds(45))
+            .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
+            .SetPriority(CacheItemPriority.Normal);
+
+            _memoryCache.Set(cacheKey, result, cacheEntryOptions);
+
+            return result;
         }
     }
 }

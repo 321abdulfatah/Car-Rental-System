@@ -5,16 +5,21 @@ using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BusinessAccessLayer.Services
 {
     public class RentalService : IRentalService
     {
-        public IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RentalService(IUnitOfWork unitOfWork)
+        private readonly IMemoryCache _memoryCache;
+
+
+        public RentalService(IUnitOfWork unitOfWork, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
+            _memoryCache = memoryCache;
         }
         public async Task<bool> IsDriverAvailableAsync(Guid driverId)
         {
@@ -114,12 +119,20 @@ namespace BusinessAccessLayer.Services
         }
         public async Task<PaginatedResult<Rental>> GetListRentalsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {
+            var cacheKey = $"{searchTerm}_{sortBy}_{pageIndex}_{pageSize}";
+            
+            if (_memoryCache.TryGetValue(cacheKey, out PaginatedResult<Rental> cachedResult))
+            {
+                return cachedResult;
+            }
+
             var includeExpressions = new List<Expression<Func<Rental, object>>>
             {
                 r => r.Car,
                 r => r.Customer,
                 r => r.Driver
             };
+
             Expression<Func<Rental, bool>> filter = rental => true;
 
             if (!string.IsNullOrEmpty(searchTerm))
@@ -165,11 +178,20 @@ namespace BusinessAccessLayer.Services
 
             var pagedRentals = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return new PaginatedResult<Rental>
+            var result = new PaginatedResult<Rental>
             {
                 Data = pagedRentals,
                 TotalCount = totalCount
-            };
+            }; 
+
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromSeconds(45))
+            .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
+            .SetPriority(CacheItemPriority.Normal);
+
+            _memoryCache.Set(cacheKey, result, cacheEntryOptions);
+
+            return result;
         }
     }
 }

@@ -5,17 +5,20 @@ using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BusinessAccessLayer.Services
 {
     public class UsersService : IUsersService
     {
-        public IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UsersService(IUnitOfWork unitOfWork)
+        private readonly IMemoryCache _memoryCache;
+
+        public UsersService(IUnitOfWork unitOfWork, IMemoryCache memoryCache)
         {
             _unitOfWork = unitOfWork;
+            _memoryCache = memoryCache;
         }
         public async Task<bool> CreateUsersAsync(Users user)
         {
@@ -77,6 +80,13 @@ namespace BusinessAccessLayer.Services
         }
         public async Task<PaginatedResult<Users>> GetListUsersAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {
+            var cacheKey = $"{searchTerm}_{sortBy}_{pageIndex}_{pageSize}";
+
+            if (_memoryCache.TryGetValue(cacheKey, out PaginatedResult<Users> cachedResult))
+            {
+                return cachedResult;
+            }
+
             Expression<Func<Users, bool>> filter = user => true;
 
             if (!string.IsNullOrEmpty(searchTerm))
@@ -113,11 +123,20 @@ namespace BusinessAccessLayer.Services
 
             var pagedUsers = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return new PaginatedResult<Users>
+            var result = new PaginatedResult<Users>
             {
                 Data = pagedUsers,
                 TotalCount = totalCount
             };
+
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromSeconds(45))
+            .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
+            .SetPriority(CacheItemPriority.Normal);
+
+            _memoryCache.Set(cacheKey, result, cacheEntryOptions);
+
+            return result;
         }
     }
 }
