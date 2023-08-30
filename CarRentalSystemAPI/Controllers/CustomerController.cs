@@ -68,6 +68,11 @@ namespace CarRentalSystemAPI.Controllers
         [HttpPut("{id}")]
         public async Task<UpdateCustomerDto> UpdateAsync(Guid id, [FromForm] UpdateCustomerDto updateCustomerDto)
         {
+            if (id != updateCustomerDto.Id)
+            {
+                var errorMessage = $"The customer cannot be updated because the {id} does not match the Id after the update {updateCustomerDto.Id}";
+                throw new InvalidOperationException(errorMessage);
+            }
             var customerRequest = _mapper.Map<Customer>(updateCustomerDto);
 
             var isCustomerUpdated = await _customerService.UpdateCustomerAsync(customerRequest);

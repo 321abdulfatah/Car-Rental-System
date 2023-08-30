@@ -6,6 +6,8 @@ using DataAccessLayer.Models;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq;
+using Abp.Collections.Extensions;
 
 namespace BusinessAccessLayer.Services
     {
@@ -30,7 +32,17 @@ namespace BusinessAccessLayer.Services
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
+                {
+                    var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+                    
+                    carInMemoryCache.Add(car);
+
+                    _memoryCache.Remove(CacheKeys.Cars);
+                    
+                    _memoryCache.Set(CacheKeys.Cars, carInMemoryCache);
+
                     return true;
+                }
                 else
                     return false;
             }
@@ -52,11 +64,22 @@ namespace BusinessAccessLayer.Services
 
                 if (canDelete)
                 {
-                    _unitOfWork.Cars.DeleteAsync(carId);
+                    await _unitOfWork.Cars.DeleteAsync(carId);
                     var result = _unitOfWork.Save();
 
                     if (result > 0)
+                    {
+                        var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+
+                        var oldCarRecord = carInMemoryCache.FirstOrDefault(c => c.Id == carId);
+                        carInMemoryCache.Remove(oldCarRecord);
+
+                        _memoryCache.Remove(CacheKeys.Cars);
+
+                        _memoryCache.Set(CacheKeys.Cars, carInMemoryCache);
+
                         return true;
+                    }
                     else
                         return false;
                 }
@@ -70,16 +93,18 @@ namespace BusinessAccessLayer.Services
 
         public async Task<Car> GetCarByIdAsync(Guid carId)
         {
-            var includeExpressions = new List<Expression<Func<Car, object>>>
+            /*var includeExpressions = new List<Expression<Func<Car, object>>>
             {
                 c => c.Driver,
-            };
-            var carDetails = await _unitOfWork.Cars.GetAsync(carId, includeExpressions);
+            };*/
+            var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+
+            var carDetails = carInMemoryCache.FirstOrDefault(c => c.Id == carId);
+
+            //var carDetails = await _unitOfWork.Cars.GetAsync(carId, includeExpressions);
 
             if (carDetails == null)
             {
-                //throw new Exceptions.EntityNotFoundException($"Couldn't find the Car with Id {carId} in the Database.");
-
                 throw new EntityNotFoundException($"Car with ID {carId} not found.");
             }
             return carDetails;
@@ -89,13 +114,32 @@ namespace BusinessAccessLayer.Services
         {
             if (car!= null)
             {
+                var carEntity = await _unitOfWork.Cars.GetAsync(car.Id);
                 
+                if (carEntity == null)
+                    throw new EntityNotFoundException($"Car with ID {car.Id} not found.");
+                
+
                 await _unitOfWork.Cars.UpdateAsync(car);
 
                 var result = _unitOfWork.Save();
 
                 if (result > 0)
+                {
+                    var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+
+                    var oldCarRecord = carInMemoryCache.FirstOrDefault(c => c.Id == car.Id);
+                    var oldCarRecordIndex = carInMemoryCache.FindIndex(c => c.Id == car.Id);
+                    
+                    carInMemoryCache.Remove(oldCarRecord);
+                    carInMemoryCache.Insert(oldCarRecordIndex,car);
+
+                    _memoryCache.Remove(CacheKeys.Cars);
+
+                    _memoryCache.Set(CacheKeys.Cars, carInMemoryCache);
+
                     return true;
+                }
                 else
                     return false;
                 
@@ -105,17 +149,16 @@ namespace BusinessAccessLayer.Services
 
         public async Task<PaginatedResult<Car>> GetListCarsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {
-
-            var cacheKey = $"{searchTerm}_{sortBy}_{pageIndex}_{pageSize}";
-            if (_memoryCache.TryGetValue(cacheKey, out PaginatedResult<Car> cachedResult))
-            {
-                return cachedResult;
-            }
-
             var includeExpressions = new List<Expression<Func<Car, object>>>
             {
                 c => c.Driver,
             };
+
+            /*if (!_memoryCache.TryGetValue(CacheKeys.Cars, out List<Car> cachedResult))
+            {
+                var cars = await _unitOfWork.Cars.GetAll(includeExpressions).ToListAsync();
+                _memoryCache.Set(CacheKeys.Cars, cars);
+            }*/
 
             Expression<Func<Car, bool>> filter = car => true;
             
@@ -124,13 +167,14 @@ namespace BusinessAccessLayer.Services
                                          car.EngineCapacity.ToString().Equals(searchTerm) ||
                                          car.DailyFare.ToString().Equals(searchTerm);
 
-            var query = _unitOfWork.Cars.GetAll(includeExpressions);
-
+            //var query = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+            var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+            
             // Apply filter
-            query = query.Where(filter);
+            var query = carInMemoryCache.AsQueryable().Where(filter);
 
             // Calculate total count
-            var totalCount = await query.CountAsync();
+            var totalCount = query.Count();
 
             if (!string.IsNullOrEmpty(sortBy))
             {
@@ -162,20 +206,13 @@ namespace BusinessAccessLayer.Services
                 }
             }
 
-            var pagedCars = await query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            var pagedCars = query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
 
             var result = new PaginatedResult<Car>
             {
                 Data = pagedCars,
                 TotalCount = totalCount
             };
-
-            var cacheEntryOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromSeconds(45))
-            .SetAbsoluteExpiration(TimeSpan.FromSeconds(3600))
-            .SetPriority(CacheItemPriority.Normal);
-
-            _memoryCache.Set(cacheKey, result, cacheEntryOptions);
 
             return result;
         }

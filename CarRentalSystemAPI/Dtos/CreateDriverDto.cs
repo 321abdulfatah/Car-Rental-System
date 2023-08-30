@@ -37,6 +37,6 @@ namespace CarRentalSystemAPI.Dtos
         [Required]
         public bool IsAvailable { get; set; }
         
-        public Guid? DriverId { get; set; }
+        public Guid? ReplacmentDriverId { get; set; }
     }
 }

@@ -74,6 +74,11 @@ namespace CarRentalSystemAPI.Controllers
         [HttpPut("{id}")]
         public async Task<UpdateRentalDto> UpdateAsync(Guid id, [FromForm] UpdateRentalDto updateRentalDto)
         {
+            if (id != updateRentalDto.Id)
+            {
+                var errorMessage = $"The rental cannot be updated because the {id} does not match the Id after the update {updateRentalDto.Id}";
+                throw new InvalidOperationException(errorMessage);
+            }
             var rentalRequest = _mapper.Map<Rental>(updateRentalDto);
 
             var isRentalUpdated = await _rentalService.UpdateRentalAsync(rentalRequest);

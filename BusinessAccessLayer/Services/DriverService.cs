@@ -67,6 +67,11 @@ namespace BusinessAccessLayer.Services
         {
             if (driver != null)
             {
+                var driverEntity = await _unitOfWork.Drivers.GetAsync(driver.Id);
+
+                if (driverEntity == null)
+                    throw new EntityNotFoundException($"Driver with ID {driver.Id} not found.");
+
                 await _unitOfWork.Drivers.UpdateAsync(driver);
 
                 var result = _unitOfWork.Save();

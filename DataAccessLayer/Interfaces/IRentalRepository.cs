@@ -8,8 +8,5 @@ namespace DataAccessLayer.Interfaces
     {
         Task<bool> IsCarRentedAsync(Guid carId);
 
-        Task<PaginatedResult<Rental>> GetListAsync(Expression<Func<Rental, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
-
-
     }
 }

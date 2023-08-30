@@ -28,8 +28,8 @@ namespace BusinessAccessLayer.Data.Config
 
 
             builder.HasOne<Driver>()
-            .WithOne(d => d.BehalfOfDriver)
-            .HasForeignKey<Driver>(c => c.DriverId).OnDelete(DeleteBehavior.ClientSetNull);
+            .WithOne(d => d.ReplacmentDriver)
+            .HasForeignKey<Driver>(c => c.ReplacmentDriverId).OnDelete(DeleteBehavior.ClientSetNull);
         }
     }
 }

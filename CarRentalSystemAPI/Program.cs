@@ -64,16 +64,23 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
 builder.Services.AddScoped<IRentalService, RentalService>();
 
+// cache memory
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ICacheInitializerService, CacheInitializerService>();
+
 // Profiles
 builder.Services.AddAutoMapper(typeof(CarProfile));
 builder.Services.AddAutoMapper(typeof(UsersProfile));
 
 // Set Database
 builder.Services.AddDbContext<CarRentalDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("sqlcon") ?? throw new InvalidOperationException("Connection string have some issues.")));
+    { 
+        options.UseSqlServer(builder.Configuration.GetConnectionString("sqlcon") ?? throw new InvalidOperationException("Connection string have some issues."));
+        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+
+    });
 
 
-builder.Services.AddMemoryCache();
 
 
 var app = builder.Build();
@@ -101,5 +108,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var cacheInitializer = scope.ServiceProvider.GetRequiredService<ICacheInitializerService>();
+    cacheInitializer.InitializeCacheAsync().Wait();
+}
+/*
+// Initialize the cache when the application starts
+var cacheInitializerService = app.Services.GetRequiredService<ICacheInitializerService>();
+cacheInitializerService.InitializeCacheAsync().Wait();*/
 
 app.Run();

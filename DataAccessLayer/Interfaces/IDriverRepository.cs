@@ -8,7 +8,5 @@ namespace DataAccessLayer.Interfaces
     {
         Task<bool> IsDriverAvailableAsync(Guid driverId);
 
-        Task<PaginatedResult<Driver>> GetListAsync(Expression<Func<Driver, bool>> filter, string sortBy, bool isAscending, int pageIndex, int pageSize);
-
     }
 }

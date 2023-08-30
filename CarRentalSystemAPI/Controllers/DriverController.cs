@@ -70,6 +70,11 @@ namespace CarRentalSystemAPI.Controllers
         [HttpPut("{id}")]
         public async Task<UpdateDriverDto> UpdateAsync(Guid id, [FromForm] UpdateDriverDto updateDriverDto)
         {
+            if (id != updateDriverDto.Id)
+            {
+                var errorMessage = $"The driver cannot be updated because the {id} does not match the Id after the update {updateDriverDto.Id}";
+                throw new InvalidOperationException(errorMessage);
+            }
             var driverRequest = _mapper.Map<Driver>(updateDriverDto);
 
             var isDriverUpdated = await _driverService.UpdateDriverAsync(driverRequest);

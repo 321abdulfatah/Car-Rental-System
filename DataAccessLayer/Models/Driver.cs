@@ -3,9 +3,9 @@
     public class Driver:Person
     {
 
-        public Guid? DriverId { get; set; }
+        public Guid? ReplacmentDriverId { get; set; }
 
-        public Driver BehalfOfDriver { get; set; }
+        public Driver ReplacmentDriver { get; set; }
 
         public double Salary { get; set; }
 

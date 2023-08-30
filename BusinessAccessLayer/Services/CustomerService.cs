@@ -67,6 +67,11 @@ namespace BusinessAccessLayer.Services
         {
             if (customer != null)
             {
+                var customerEntity = await _unitOfWork.Customers.GetAsync(customer.Id);
+
+                if (customerEntity == null)
+                    throw new EntityNotFoundException($"Customer with ID {customer.Id} not found.");
+
                 await _unitOfWork.Customers.UpdateAsync(customer);
 
                 var result = _unitOfWork.Save();

@@ -50,6 +50,7 @@ namespace BusinessAccessLayer.Repositories
 				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)
 			};
 			var token = tokenHandler.CreateToken(tokenDescriptor);
+
 			return new Tokens { Token = tokenHandler.WriteToken(token) };
 
 		}

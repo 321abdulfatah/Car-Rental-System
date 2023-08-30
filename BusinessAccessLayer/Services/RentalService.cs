@@ -35,17 +35,18 @@ namespace BusinessAccessLayer.Services
                     throw new Exception("The car cannot be rented with a previous date, " +
                                         $"the date must be after the current date and time {DateTime.Now}");
                 }
-                if (rental.DriverId != null)
+
+                if (rental.DriverId.HasValue && rental.DriverId != Guid.Empty)
                 {
                     var driverId = rental.DriverId;
 
                     bool isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
                     
-                    while(!isDriverAvailable && driverId != null)
+                    while(!isDriverAvailable && driverId.HasValue && driverId != Guid.Empty)
                     {
                         var driver = await _unitOfWork.Drivers.GetAsync((Guid)driverId);
 
-                        driverId = driver.DriverId;
+                        driverId = driver.ReplacmentDriverId;
 
                         isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
                     }
@@ -105,6 +106,11 @@ namespace BusinessAccessLayer.Services
         {
             if (rental != null)
             {
+                var rentalEntity = await _unitOfWork.Rentals.GetAsync(rental.Id);
+
+                if (rentalEntity == null)
+                    throw new EntityNotFoundException($"Rental with ID {rental.Id} not found.");
+
                 await _unitOfWork.Rentals.UpdateAsync(rental);
 
                 var result = _unitOfWork.Save();
