@@ -4,8 +4,6 @@
     {
         ICarRepository Cars { get; }
 
-        IUsersRepository Users { get; }
-
         ICustomerRepository Customers { get; }
 
         IDriverRepository Drivers { get; }

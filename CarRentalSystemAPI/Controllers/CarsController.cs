@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
 
-
 namespace CarRentalSystemAPI.Controllers
 {
     //[Authorize]

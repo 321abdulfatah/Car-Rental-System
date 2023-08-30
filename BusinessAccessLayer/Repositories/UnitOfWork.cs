@@ -8,21 +8,18 @@ namespace BusinessAccessLayer.Repositories
 
         private readonly CarRentalDBContext _dbContext;
         public ICarRepository Cars { get; }
-        public IUsersRepository Users { get; }
         public ICustomerRepository Customers { get; }
         public IDriverRepository Drivers { get; }
         public IRentalRepository Rentals { get; }
 
         public UnitOfWork(CarRentalDBContext dbContext,
                             ICarRepository carRepository,
-                            IUsersRepository UserRepository,
                             ICustomerRepository CustomerRepository,
                             IDriverRepository DriverRepository,
                             IRentalRepository RentalRepository)
         {
             _dbContext = dbContext;
             Cars = carRepository;
-            Users = UserRepository;
             Customers = CustomerRepository;
             Drivers = DriverRepository;
             Rentals = RentalRepository; 

@@ -10,31 +10,12 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using CarRentalSystemAPI.Swagger;
 using BusinessAccessLayer.Services.Interfaces;
 using BusinessAccessLayer.Services;
+using DataAccessLayer.Models;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddAuthentication( x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer( x =>
-    {
-        x.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-
-        };
-});
-
-builder.Services.AddAuthorization();
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -50,19 +31,17 @@ builder.Services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
 
 // Repos
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped(typeof(IJWTManagerRepository), typeof(JWTManagerRepository));
 builder.Services.AddScoped<ICarRepository, CarRepository>();
-builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IRentalRepository, RentalRepository>();
 
 // Services
 builder.Services.AddScoped<ICarService, CarService>();
-builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
 builder.Services.AddScoped<IRentalService, RentalService>();
+builder.Services.AddTransient<IAuthService, AuthService>();
 
 // cache memory
 builder.Services.AddMemoryCache();
@@ -70,7 +49,6 @@ builder.Services.AddScoped<ICacheInitializerService, CacheInitializerService>();
 
 // Profiles
 builder.Services.AddAutoMapper(typeof(CarProfile));
-builder.Services.AddAutoMapper(typeof(UsersProfile));
 
 // Set Database
 builder.Services.AddDbContext<CarRentalDBContext>(options =>
@@ -80,7 +58,38 @@ builder.Services.AddDbContext<CarRentalDBContext>(options =>
 
     });
 
+// For Identity  
+builder.Services.AddIdentity<User, IdentityRole>()
+                .AddEntityFrameworkStores<CarRentalDBContext>()
+                .AddDefaultTokenProviders();
 
+// Adding Authentication  
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+
+// Adding Jwt Bearer  
+
+.AddJwtBearer(x =>
+{
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+
+    };
+});
+
+builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
