@@ -149,29 +149,21 @@ namespace BusinessAccessLayer.Services
 
         public async Task<PaginatedResult<Car>> GetListCarsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {
-            var includeExpressions = new List<Expression<Func<Car, object>>>
-            {
-                c => c.Driver,
-            };
 
-            /*if (!_memoryCache.TryGetValue(CacheKeys.Cars, out List<Car> cachedResult))
-            {
-                var cars = await _unitOfWork.Cars.GetAll(includeExpressions).ToListAsync();
-                _memoryCache.Set(CacheKeys.Cars, cars);
-            }*/
+            var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as IEnumerable<Car>;
 
-            Expression<Func<Car, bool>> filter = car => true;
-            
+            //Expression<Func<Car, bool>> filter = car => true;
+            var query = carInMemoryCache;
+
             if (!string.IsNullOrEmpty(searchTerm))
-                filter = car => car.Color.Contains(searchTerm) || car.Type.Contains(searchTerm) ||
-                                         car.EngineCapacity.ToString().Equals(searchTerm) ||
-                                         car.DailyFare.ToString().Equals(searchTerm);
-
-            //var query = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
-            var carInMemoryCache = _memoryCache.Get(CacheKeys.Cars) as List<Car>;
+            {
+                // Apply filter
+                query = carInMemoryCache.Where(car => car.Color.Contains(searchTerm) || car.Type.Contains(searchTerm) ||
+                                           car.EngineCapacity.ToString().Equals(searchTerm) ||  
+                                           car.DailyFare.ToString().Equals(searchTerm));
+            }
             
-            // Apply filter
-            var query = carInMemoryCache.AsQueryable().Where(filter);
+            
 
             // Calculate total count
             var totalCount = query.Count();
@@ -206,7 +198,7 @@ namespace BusinessAccessLayer.Services
                 }
             }
 
-            var pagedCars = query.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+            var pagedCars = query.Skip((pageIndex - 1) * pageSize).Take(pageSize);
 
             var result = new PaginatedResult<Car>
             {

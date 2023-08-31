@@ -12,14 +12,5 @@
         /// </summary>
         public const string User = "User";
 
-        /// <summary>
-        /// The role name for customer users.
-        /// </summary>
-        public const string Customer = "Customer";
-
-        /// <summary>
-        /// The role name for driver users.
-        /// </summary>
-        public const string Driver = "Driver";
     }
 }
