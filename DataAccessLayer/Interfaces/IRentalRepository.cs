@@ -7,6 +7,7 @@ namespace DataAccessLayer.Interfaces
     public interface IRentalRepository : IRepository<Rental>
     {
         Task<bool> IsCarRentedAsync(Guid carId);
+        Task<bool> IsCarRentedAsync(Guid carId, DateTime startDateRent, DateTime endDateRent);
 
     }
 }

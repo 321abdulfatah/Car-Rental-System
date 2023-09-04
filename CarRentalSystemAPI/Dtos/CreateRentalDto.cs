@@ -14,15 +14,10 @@ namespace CarRentalSystemAPI.Dtos
         public Guid? DriverId { get; set; }
 
         [Required]
-        public int Rent { get; set; }
-
-        [Required]
-        public StatusRent StatusRent { get; set; }
-
-        [Required]
         public DateTime StartDateRent { get; set; }
 
         [Required]
+        [Range(1, 365, ErrorMessage = "The value must be between 1 and 365 days.")]
         public int RentTerm { get; set; }
     }
 }

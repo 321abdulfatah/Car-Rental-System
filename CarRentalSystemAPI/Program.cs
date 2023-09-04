@@ -12,6 +12,7 @@ using BusinessAccessLayer.Services.Interfaces;
 using BusinessAccessLayer.Services;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Identity;
+using CarRentalSystemAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +64,8 @@ builder.Services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<CarRentalDBContext>()
                 .AddDefaultTokenProviders();
 
+builder.Services.AddTransient<ExceptionMiddleware>();
+
 // Adding Authentication  
 
 builder.Services.AddAuthentication(x =>
@@ -108,6 +111,8 @@ else
     app.UseHsts();
 }
 
+app.UseGlobalExceptionHandler();
+    
 app.UseStatusCodePages();
 
 app.UseHttpsRedirection();

@@ -18,7 +18,7 @@ namespace BusinessAccessLayer.Data.Config
 
             builder.Property(b => b.Age).IsRequired();
 
-            builder.Property(b => b.Gender).HasMaxLength(5).IsRequired();
+            builder.Property(b => b.Gender).HasMaxLength(6).IsRequired();
 
             builder.Property(b => b.Phone).IsRequired();
 

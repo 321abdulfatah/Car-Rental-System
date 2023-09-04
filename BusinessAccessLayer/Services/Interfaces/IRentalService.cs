@@ -8,6 +8,8 @@ namespace BusinessAccessLayer.Services.Interfaces
     {
         Task<bool> IsDriverAvailableAsync(Guid driverId);
 
+        Task ValidateRentalAsync(Rental rental);
+
         Task<bool> CreateRentalAsync(Rental rental);
 
         Task<Rental> GetRentalByIdAsync(Guid rentalId);

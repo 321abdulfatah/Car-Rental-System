@@ -20,6 +20,30 @@ namespace BusinessAccessLayer.Repositories
         {
             return await _dbContext.Rentals.AnyAsync(r => r.CarId == carId);
         }
+        public async Task<bool> IsCarRentedAsync(Guid carId, DateTime startDateRent, DateTime endDateRent)
+        {
+            bool isRented = false;
+            var rentedCarList = await _dbContext.Rentals.Where(r => r.CarId == carId).ToListAsync();
+            
+            if (rentedCarList.Count != 0)
+            {
+                foreach (var rentedCar in rentedCarList)
+                {
+                    DateTime beginningRent = rentedCar.StartDateRent;
+                    DateTime endRent = rentedCar.StartDateRent.AddDays(rentedCar.RentTerm);
+
+                    if ((endRent < startDateRent) || (beginningRent > endDateRent))
+                        isRented = false;
+                    else
+                    {
+                        isRented = true;
+                        break;
+                    }
+                }
+
+            }
+            return isRented;
+        }
 
     }
 }

@@ -1,4 +1,4 @@
-﻿using Abp.Domain.Entities;
+﻿using BusinessAccessLayer.Exceptions;
 using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
@@ -58,7 +58,7 @@ namespace BusinessAccessLayer.Services
             var customerDetails = await _unitOfWork.Customers.GetAsync(customerId);
             if (customerDetails == null)
             {
-                throw new EntityNotFoundException($"Customer with ID {customerId} not found.");
+                throw new NotFoundException($"Customer with ID {customerId} not found.");
             }
             return customerDetails;
         }
@@ -70,7 +70,7 @@ namespace BusinessAccessLayer.Services
                 var customerEntity = await _unitOfWork.Customers.GetAsync(customer.Id);
 
                 if (customerEntity == null)
-                    throw new EntityNotFoundException($"Customer with ID {customer.Id} not found.");
+                    throw new NotFoundException($"Customer with ID {customer.Id} not found.");
 
                 await _unitOfWork.Customers.UpdateAsync(customer);
 

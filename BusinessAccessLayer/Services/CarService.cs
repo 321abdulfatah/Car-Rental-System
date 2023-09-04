@@ -1,5 +1,4 @@
-﻿using Abp.Domain.Entities;
-using BusinessAccessLayer.Services.Interfaces;
+﻿using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
 using DataAccessLayer.Models;
@@ -7,7 +6,8 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
-using Abp.Collections.Extensions;
+using BusinessAccessLayer.Exceptions;
+using System.Net;
 
 namespace BusinessAccessLayer.Services
     {
@@ -85,7 +85,7 @@ namespace BusinessAccessLayer.Services
                 }
                 else
                 {
-                    throw new Exception("Car cannot be deleted because it is rented.");
+                    throw new CustomException ("Car cannot be deleted because it is rented.",null, HttpStatusCode.BadRequest);
                 }
             }
             return false;
@@ -105,7 +105,7 @@ namespace BusinessAccessLayer.Services
 
             if (carDetails == null)
             {
-                throw new EntityNotFoundException($"Car with ID {carId} not found.");
+                throw new NotFoundException($"Car with ID {carId} not found.");
             }
             return carDetails;
         }
@@ -117,7 +117,7 @@ namespace BusinessAccessLayer.Services
                 var carEntity = await _unitOfWork.Cars.GetAsync(car.Id);
                 
                 if (carEntity == null)
-                    throw new EntityNotFoundException($"Car with ID {car.Id} not found.");
+                    throw new NotFoundException($"Car with ID {car.Id} not found.");
                 
 
                 await _unitOfWork.Cars.UpdateAsync(car);

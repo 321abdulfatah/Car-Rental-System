@@ -16,7 +16,7 @@ namespace DataAccessLayer.Models
 
         public virtual Driver Driver { get; set; }
 
-        public int Rent { get; set; }
+        public double Rent { get; set; }
 
         public StatusRent StatusRent { get; set; }
 

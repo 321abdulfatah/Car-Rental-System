@@ -1,4 +1,4 @@
-﻿using Abp.Domain.Entities;
+﻿using BusinessAccessLayer.Exceptions;
 using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
@@ -6,6 +6,8 @@ using DataAccessLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Microsoft.Extensions.Caching.Memory;
+using DataAccessLayer.Enums;
+using System.Net;
 
 namespace BusinessAccessLayer.Services
 {
@@ -21,6 +23,74 @@ namespace BusinessAccessLayer.Services
             _unitOfWork = unitOfWork;
             _memoryCache = memoryCache;
         }
+        public async Task ValidateRentalAsync(Rental rental)
+        {
+            if (rental != null)
+            {
+                // Check if the car has been found
+                var car = await _unitOfWork.Cars.GetAsync(rental.CarId);
+
+                if (car == null)
+                {
+                    throw new NotFoundException($"Car with ID {rental.CarId} not found.");
+                }
+
+                // Check if the customer has been found
+                var customer = await _unitOfWork.Customers.GetAsync(rental.CustomerId);
+
+                if (customer == null)
+                {
+                    throw new NotFoundException($"Customer with ID {rental.CustomerId} not found.");
+                }
+
+                // Check if the driver has been found
+                if (rental.DriverId.HasValue && rental.DriverId != Guid.Empty)
+                {
+                    var driver = await _unitOfWork.Drivers.GetAsync((Guid)rental.DriverId);
+
+                    if (driver == null)
+                    {
+                        throw new NotFoundException($"Driver with ID {rental.DriverId} not found.");
+                    }
+                }
+               
+
+                // check validate Date
+                if (rental.StartDateRent <= DateTime.Now)
+                {
+                    throw new CustomException("The car cannot be rented with a previous date, " +
+                                        $"the date must be after the current date and time {DateTime.Now}", null,
+                                        HttpStatusCode.BadRequest);
+                }
+
+                
+
+                // Check if a driver is available
+                if (rental.DriverId.HasValue && rental.DriverId != Guid.Empty)
+                {
+                    var driverId = rental.DriverId;
+
+                    bool isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
+
+                    while (!isDriverAvailable && driverId.HasValue && driverId != Guid.Empty)
+                    {
+                        var driver = await _unitOfWork.Drivers.GetAsync((Guid)driverId);
+
+                        driverId = driver.ReplacmentDriverId;
+
+                        if (driverId != Guid.Empty && driverId.HasValue)
+                        {
+                            isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
+                        }
+                    }
+
+                    rental.DriverId = isDriverAvailable ? driverId :
+                        throw new CustomException("The current driver for this car is currently unavailable " +
+                                            "and there is no other driver to replace him", null, HttpStatusCode.BadRequest);
+                }
+
+            }   
+        }
         public async Task<bool> IsDriverAvailableAsync(Guid driverId)
         {
             bool isAvailable = await _unitOfWork.Drivers.IsDriverAvailableAsync(driverId);
@@ -28,46 +98,34 @@ namespace BusinessAccessLayer.Services
         }
         public async Task<bool> CreateRentalAsync(Rental rental)
         {
-            if (rental != null)
+            await ValidateRentalAsync(rental);
+
+            // check if the car has been rented
+            DateTime startDateRent = rental.StartDateRent;
+            DateTime endDateRent = rental.StartDateRent.AddDays(rental.RentTerm);
+
+            bool isRented = await _unitOfWork.Rentals.IsCarRentedAsync(rental.CarId, startDateRent, endDateRent);
+            if (isRented)
             {
-                if (rental.StartDateRent <= DateTime.Now)
-                {
-                    throw new Exception("The car cannot be rented with a previous date, " +
-                                        $"the date must be after the current date and time {DateTime.Now}");
-                }
-
-                if (rental.DriverId.HasValue && rental.DriverId != Guid.Empty)
-                {
-                    var driverId = rental.DriverId;
-
-                    bool isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
-                    
-                    while(!isDriverAvailable && driverId.HasValue && driverId != Guid.Empty)
-                    {
-                        var driver = await _unitOfWork.Drivers.GetAsync((Guid)driverId);
-
-                        driverId = driver.ReplacmentDriverId;
-
-                        isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
-                    }
-
-                    rental.DriverId = isDriverAvailable ? driverId : 
-                        throw new Exception("The current driver for this car is currently unavailable " +
-                                            "and there is no other driver to replace him");
-                }
-
-                await _unitOfWork.Rentals.CreateAsync(rental);
-
-                var result = _unitOfWork.Save();
-
-                if (result > 0)
-                    return true;
-                else
-                    return false;
+                throw new CustomException($"Car cannot be rented from {startDateRent} to {} because it is rented.", null, HttpStatusCode.BadRequest);
             }
-            return false;
-        }
 
+            double dailyFare = await _unitOfWork.Cars.GetDailyFare(rental.CarId);
+            // Set Rent as RentTerm * DailyFare
+            rental.Rent = rental.RentTerm * dailyFare;
+
+            // Set Status as Rented
+            rental.StatusRent = StatusRent.Rented;
+
+            await _unitOfWork.Rentals.CreateAsync(rental);
+
+            var result = _unitOfWork.Save();
+
+            if (result > 0)
+                return true;
+            else
+                return false;
+        }
         public async Task<bool> DeleteRentalAsync(Guid rentalId)
         {
             var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId);
@@ -96,7 +154,7 @@ namespace BusinessAccessLayer.Services
             var rentalDetails = await _unitOfWork.Rentals.GetAsync(rentalId, includeExpressions);
             if (rentalDetails == null)
             {
-                throw new EntityNotFoundException($"Rental with ID {rentalId} not found.");
+                throw new NotFoundException($"Rental with ID {rentalId} not found.");
                 
             }
             return rentalDetails;
@@ -104,24 +162,31 @@ namespace BusinessAccessLayer.Services
 
         public async Task<bool> UpdateRentalAsync(Rental rental)
         {
-            if (rental != null)
-            {
-                var rentalEntity = await _unitOfWork.Rentals.GetAsync(rental.Id);
 
-                if (rentalEntity == null)
-                    throw new EntityNotFoundException($"Rental with ID {rental.Id} not found.");
+            var rentalEntity = await _unitOfWork.Rentals.GetAsync(rental.Id);
 
-                await _unitOfWork.Rentals.UpdateAsync(rental);
+            if (rentalEntity == null)
+                throw new NotFoundException($"Rental with ID {rental.Id} not found.");
 
-                var result = _unitOfWork.Save();
+            await ValidateRentalAsync(rental);
 
-                if (result > 0)
-                    return true;
-                else
-                    return false;
+            double dailyFare = await _unitOfWork.Cars.GetDailyFare(rental.CarId);
+            // Set Rent as RentTerm * DailyFare
+            rental.Rent = rental.RentTerm * dailyFare;
+
+            // Set Status as Rented
+            rental.StatusRent = StatusRent.Rented;
+
+            await _unitOfWork.Rentals.UpdateAsync(rental);
+
+            var result = _unitOfWork.Save();
+
+            if (result > 0)
+                return true;
+            else
+                return false;
                 
-            }
-            return false;
+            
         }
         public async Task<PaginatedResult<Rental>> GetListRentalsAsync(string searchTerm, string sortBy, int pageIndex, int pageSize)
         {

@@ -2,9 +2,10 @@
 {
     public enum StatusRent
     {
-        Rented = 0,
-        Returned = 1,
-        Canceled = 2
+        None = 0,
+        Rented = 1,
+        Returned = 2,
+        Canceled = 3
     }
 
 }

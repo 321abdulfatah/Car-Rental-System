@@ -1,4 +1,4 @@
-﻿using Abp.Domain.Entities;
+﻿using BusinessAccessLayer.Exceptions;
 using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using DataAccessLayer.Interfaces;
@@ -58,7 +58,7 @@ namespace BusinessAccessLayer.Services
             var driverDetails = await _unitOfWork.Drivers.GetAsync(driverId);
             if (driverDetails == null)
             {
-                throw new EntityNotFoundException($"Driver with ID {driverId} not found.");
+                throw new NotFoundException($"Driver with ID {driverId} not found.");
             }
             return driverDetails;
         }
@@ -70,7 +70,7 @@ namespace BusinessAccessLayer.Services
                 var driverEntity = await _unitOfWork.Drivers.GetAsync(driver.Id);
 
                 if (driverEntity == null)
-                    throw new EntityNotFoundException($"Driver with ID {driver.Id} not found.");
+                    throw new NotFoundException($"Driver with ID {driver.Id} not found.");
 
                 await _unitOfWork.Drivers.UpdateAsync(driver);
 
