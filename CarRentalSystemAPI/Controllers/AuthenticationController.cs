@@ -1,6 +1,6 @@
-﻿using BusinessAccessLayer.Services.Interfaces;
+﻿using BusinessAccessLayer.Exceptions;
+using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRentalSystemAPI.Controllers
@@ -26,9 +26,8 @@ namespace CarRentalSystemAPI.Controllers
             {
                 if (!ModelState.IsValid)
                     return BadRequest("Invalid payload");
-                var (status, message) = await _authService.Login(model);
-                if (status == 0)
-                    return BadRequest(message);
+                var message = await _authService.Login(model);
+                
                 return Ok(message);
             }
             catch (Exception ex)
@@ -40,24 +39,26 @@ namespace CarRentalSystemAPI.Controllers
 
         [HttpPost]
         [Route("registeration")]
-        public async Task<IActionResult> Register([FromForm] RegistrationModel model)
+        public async Task<RegistrationModel> Register([FromForm] RegistrationModel model)
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return BadRequest("Invalid payload");
-                var (status, message) = await _authService.Registeration(model, UserRoles.User);
-                if (status == 0)
+                
+                bool  isRegistered = await _authService.Registeration(model, UserRoles.User);
+                
+                if(isRegistered)
+                    return model;
+                else
                 {
-                    return BadRequest(message);
+                    var errorMessage = "Failed to create the car due to a validation error.";
+                    throw new CustomException(errorMessage);
+                    
                 }
-                return CreatedAtAction(nameof(Register), model);
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                throw new CustomException(ex.Message);
             }
         }
 

@@ -1,4 +1,6 @@
-﻿using BusinessAccessLayer.Services.Interfaces;
+﻿using BusinessAccessLayer.Exceptions;
+using BusinessAccessLayer.Services.Interfaces;
+using System.Net;
 using Microsoft.Extensions.Configuration;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Identity;
@@ -21,11 +23,11 @@ namespace BusinessAccessLayer.Services
             _configuration = configuration;
 
         }
-        public async Task<(int, string)> Registeration(RegistrationModel model, string role)
+        public async Task<bool> Registeration(RegistrationModel model, string role)
         {
             var userExists = await _userManager.FindByNameAsync(model.Username);
             if (userExists != null)
-                return (0, "User already exists");
+                throw new CustomException ("User already exists");
 
             User user = new User()
             {
@@ -35,7 +37,8 @@ namespace BusinessAccessLayer.Services
             };
             var createUserResult = await _userManager.CreateAsync(user, model.Password);
             if (!createUserResult.Succeeded)
-                return (0, "User creation failed! Please check user details and try again.");
+                throw new CustomException($"User creation failed! Please check user details {createUserResult} and try again.",
+                    null , HttpStatusCode.BadRequest);
 
             if (!await _roleManager.RoleExistsAsync(role))
                 await _roleManager.CreateAsync(new IdentityRole(role));
@@ -43,16 +46,16 @@ namespace BusinessAccessLayer.Services
             if (await _roleManager.RoleExistsAsync(UserRoles.User))
                 await _userManager.AddToRoleAsync(user, role);
 
-            return (1, "User created successfully!");
+            return true;
         }
 
-        public async Task<(int, string)> Login(LoginModel model)
+        public async Task<string> Login(LoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null)
-                return (0, "Invalid username");
+                throw new CustomException ("Invalid username");
             if (!await _userManager.CheckPasswordAsync(user, model.Password))
-                return (0, "Invalid password");
+                throw new CustomException ("Invalid password");
 
             var userRoles = await _userManager.GetRolesAsync(user);
             var authClaims = new List<Claim>
@@ -66,7 +69,7 @@ namespace BusinessAccessLayer.Services
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));
             }
             string token = GenerateToken(authClaims);
-            return (1, token);
+            return (token);
         }
 
 

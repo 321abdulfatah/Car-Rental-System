@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using System.Linq.Expressions;
+using BusinessAccessLayer.Exceptions;
 
 namespace CarRentalSystemAPI.Controllers
 {
@@ -63,7 +64,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Failed to create the driver due to a validation error.";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
         }
 
@@ -73,7 +74,7 @@ namespace CarRentalSystemAPI.Controllers
             if (id != updateDriverDto.Id)
             {
                 var errorMessage = $"The driver cannot be updated because the {id} does not match the Id after the update {updateDriverDto.Id}";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
             var driverRequest = _mapper.Map<Driver>(updateDriverDto);
 
@@ -85,7 +86,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Failed to update the driver due to a validation error.";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
         }
 
@@ -105,7 +106,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Driver with the specified ID can not delete.";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
         }
     }

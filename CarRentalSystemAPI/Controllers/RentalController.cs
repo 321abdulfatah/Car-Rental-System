@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using BusinessAccessLayer.Services.Interfaces;
 using DataAccessLayer.Common.Models;
 using System.Linq.Expressions;
+using BusinessAccessLayer.Exceptions;
 
 namespace CarRentalSystemAPI.Controllers
 {
@@ -65,7 +66,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Failed to create the rental due to a validation error.";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
 
         }
@@ -77,7 +78,7 @@ namespace CarRentalSystemAPI.Controllers
             if (id != updateRentalDto.Id)
             {
                 var errorMessage = $"The rental cannot be updated because the {id} does not match the Id after the update {updateRentalDto.Id}";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
             var rentalRequest = _mapper.Map<Rental>(updateRentalDto);
 
@@ -89,7 +90,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Failed to update the rental due to a validation error.";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
         }
 
@@ -110,7 +111,7 @@ namespace CarRentalSystemAPI.Controllers
             else
             {
                 var errorMessage = "Rental with the specified ID can not delete.";
-                throw new InvalidOperationException(errorMessage);
+                throw new CustomException(errorMessage);
             }
         }
     }

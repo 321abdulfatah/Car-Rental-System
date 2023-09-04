@@ -107,7 +107,7 @@ namespace BusinessAccessLayer.Services
             bool isRented = await _unitOfWork.Rentals.IsCarRentedAsync(rental.CarId, startDateRent, endDateRent);
             if (isRented)
             {
-                throw new CustomException($"Car cannot be rented from {startDateRent} to {} because it is rented.", null, HttpStatusCode.BadRequest);
+                throw new CustomException($"Car cannot be rented from {startDateRent} to {endDateRent} because it is rented.", null, HttpStatusCode.BadRequest);
             }
 
             double dailyFare = await _unitOfWork.Cars.GetDailyFare(rental.CarId);
