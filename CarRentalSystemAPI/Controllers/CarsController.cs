@@ -91,7 +91,7 @@ namespace CarRentalSystemAPI.Controllers
                 throw new CustomException(errorMessage);
             }
         }
-
+        [Authorize(Roles =UserRoles.Admin)]
         // DELETE api/<CarsController>/5
         [HttpDelete("{id}")]
         public async Task<CarDto> DeleteAsync(Guid id)

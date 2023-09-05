@@ -51,9 +51,9 @@ namespace BusinessAccessLayer.Services
 
         public async Task<string> Login(LoginModel model)
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                throw new CustomException ("Invalid username");
+                throw new CustomException ("Invalid email");
             if (!await _userManager.CheckPasswordAsync(user, model.Password))
                 throw new CustomException ("Invalid password");
 

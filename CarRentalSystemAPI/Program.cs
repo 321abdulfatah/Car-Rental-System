@@ -1,4 +1,5 @@
 using BusinessAccessLayer.Data;
+using BusinessAccessLayer.Exceptions;
 using DataAccessLayer.Interfaces;
 using BusinessAccessLayer.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using BusinessAccessLayer.Services;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Identity;
 using CarRentalSystemAPI.Middleware;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,7 +51,11 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ICacheInitializerService, CacheInitializerService>();
 
 // Profiles
+builder.Services.AddAutoMapper(typeof(AuthenticationProfile));
 builder.Services.AddAutoMapper(typeof(CarProfile));
+builder.Services.AddAutoMapper(typeof(CustomerProfile));
+builder.Services.AddAutoMapper(typeof(DriverProfile));
+builder.Services.AddAutoMapper(typeof(RentalProfile));
 
 // Set Database
 builder.Services.AddDbContext<CarRentalDBContext>(options =>
@@ -117,6 +123,16 @@ app.UseStatusCodePages();
 
 app.UseHttpsRedirection();
 
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode == (int)HttpStatusCode.Unauthorized)
+    {
+        throw new CustomException("Token Validation Has Failed. Request Access Denied",null,HttpStatusCode.Unauthorized);
+    }
+});
+
 app.UseAuthentication();
 
 app.UseAuthorization();
@@ -128,9 +144,5 @@ using (var scope = app.Services.CreateScope())
     var cacheInitializer = scope.ServiceProvider.GetRequiredService<ICacheInitializerService>();
     cacheInitializer.InitializeCacheAsync().Wait();
 }
-/*
-// Initialize the cache when the application starts
-var cacheInitializerService = app.Services.GetRequiredService<ICacheInitializerService>();
-cacheInitializerService.InitializeCacheAsync().Wait();*/
 
 app.Run();

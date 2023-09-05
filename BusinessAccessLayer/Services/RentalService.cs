@@ -83,7 +83,7 @@ namespace BusinessAccessLayer.Services
                             isDriverAvailable = await IsDriverAvailableAsync((Guid)driverId);
                         }
                     }
-
+                    
                     rental.DriverId = isDriverAvailable ? driverId :
                         throw new CustomException("The current driver for this car is currently unavailable " +
                                             "and there is no other driver to replace him", null, HttpStatusCode.BadRequest);
@@ -110,6 +110,14 @@ namespace BusinessAccessLayer.Services
                 throw new CustomException($"Car cannot be rented from {startDateRent} to {endDateRent} because it is rented.", null, HttpStatusCode.BadRequest);
             }
 
+            bool isDriverInAnotherRental = await _unitOfWork.Rentals.IsDriverInAnotherRental((Guid)rental.DriverId,
+                                                                                             startDateRent,
+                                                                                             endDateRent);
+            if (isDriverInAnotherRental)
+            {
+                throw new CustomException($"Driver cannot be Available from {startDateRent} to {endDateRent} because he is in another rental.", null, HttpStatusCode.BadRequest);
+
+            }
             double dailyFare = await _unitOfWork.Cars.GetDailyFare(rental.CarId);
             // Set Rent as RentTerm * DailyFare
             rental.Rent = rental.RentTerm * dailyFare;
