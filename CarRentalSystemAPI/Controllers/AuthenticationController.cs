@@ -1,5 +1,7 @@
-﻿using BusinessAccessLayer.Exceptions;
+﻿using AutoMapper;
+using BusinessAccessLayer.Exceptions;
 using BusinessAccessLayer.Services.Interfaces;
+using CarRentalSystemAPI.Dtos;
 using DataAccessLayer.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,45 +11,49 @@ namespace CarRentalSystemAPI.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
+        private readonly IMapper _mapper;
         private readonly IAuthService _authService;
         private readonly ILogger<AuthenticationController> _logger;
 
-        public AuthenticationController(IAuthService authService, ILogger<AuthenticationController> logger)
+        public AuthenticationController(IMapper mapper, IAuthService authService, ILogger<AuthenticationController> logger)
         {
+            _mapper = mapper;
             _authService = authService;
             _logger = logger;
         }
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> Login([FromForm] LoginModel model)
+        public async Task<LoginModel> Login([FromForm] LoginModelDto model)
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return BadRequest("Invalid payload");
-                var message = await _authService.Login(model);
+                var loginMoel = _mapper.Map<LoginModel>(model);
+
+                loginMoel.Token = await _authService.Login(loginMoel);
                 
-                return Ok(message);
+                return loginMoel;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+                throw new CustomException(ex.Message);
             }
         }
 
         [HttpPost]
         [Route("registeration")]
-        public async Task<RegistrationModel> Register([FromForm] RegistrationModel model)
+        public async Task<RegistrationModel> Register([FromForm] RegistrationModelDto model)
         {
             try
             {
-                
-                bool  isRegistered = await _authService.Registeration(model, UserRoles.User);
+                var registrationModel = _mapper.Map<RegistrationModel>(model);
+
+
+                bool isRegistered = await _authService.Registeration(registrationModel, UserRoles.Admin);
                 
                 if(isRegistered)
-                    return model;
+                    return registrationModel;
                 else
                 {
                     var errorMessage = "Failed to create the car due to a validation error.";

@@ -19,8 +19,6 @@ namespace BusinessAccessLayer.Data
 
         public DbSet<Rental> Rentals{ get; set; }
 
-        public DbSet<Tokens> Tokens { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -28,7 +26,6 @@ namespace BusinessAccessLayer.Data
             new CustomerEntityTypeConfiguration().Configure(modelBuilder.Entity<Customer>());
             new DriverEntityTypeConfiguration().Configure(modelBuilder.Entity<Driver>());
             new RentalEntityTypeConfiguration().Configure(modelBuilder.Entity<Rental>());
-            new TokensEntityTypeConfiguration().Configure(modelBuilder.Entity<Tokens>());
         }
     }
 }
